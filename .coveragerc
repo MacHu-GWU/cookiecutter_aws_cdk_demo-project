@@ -7,6 +7,8 @@ omit =
     cookiecutter_aws_cdk_demo/vendor/*
     cookiecutter_aws_cdk_demo/cli.py
     cookiecutter_aws_cdk_demo/paths.py
+    cookiecutter_aws_cdk_demo/env.py
+    cookiecutter_aws_cdk_demo/runtime.py
 
 [report]
 # Regexes for lines to exclude from consideration
