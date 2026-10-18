@@ -60,3 +60,21 @@ class OneBotoSesMixin:
         An SSM client from :attr:`boto_ses`.
         """
         return self.boto_ses.client("ssm")
+
+    def verify_boto_ses(self: One) -> None:
+        """
+        Check that :attr:`boto_ses` points at the account and region in ``config``.
+
+        Run it before any deploy, so a wrong ``AWS_PROFILE`` stops the command
+        instead of changing another account.
+
+        :raises ValueError: the account ID or the region differs from the config.
+        """
+        expected = (self.config.aws_account_id, self.config.aws_region)
+        actual = (self.aws_account_id, self.aws_region)
+        if actual != expected:
+            raise ValueError(
+                f"the boto session points at account / region {actual}, "
+                f"but config {self.config.env_name!r} expects {expected}; "
+                "check AWS_PROFILE in .env"
+            )

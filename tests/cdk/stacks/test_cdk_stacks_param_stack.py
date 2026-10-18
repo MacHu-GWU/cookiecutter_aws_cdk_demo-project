@@ -6,27 +6,24 @@ import aws_cdk as cdk
 from aws_cdk.assertions import Template
 
 from cookiecutter_aws_cdk_demo.config.api import Config
-from cookiecutter_aws_cdk_demo.one.api import One
 
 
-def test_param_stack():
+def test_param_stack(config: Config):
     """
-    The stack holds exactly one SSM parameter, named after the project, valued ``hello world``.
+    The stack holds exactly one SSM parameter, with the name and value from the config.
     """
-    one = One()
-    one.config = Config(project_name="my_project", env_name="dev", hello_value="hi")
     stack = ParamStack(
         scope=cdk.App(),
-        id="my-project-param",
-        one=one,
+        id=config.cft_stack_name_param,
+        config=config,
     )
-    assert stack.stack_name == "my-project-param"
+    assert stack.config is config
     template = Template.from_stack(stack)
     template.resource_count_is("AWS::SSM::Parameter", 1)
     template.has_resource_properties(
         "AWS::SSM::Parameter",
         {
-            "Name": "/my-project/hello",
+            "Name": "/my-project-dev/hello",
             "Type": "String",
             "Value": "hi",
         },

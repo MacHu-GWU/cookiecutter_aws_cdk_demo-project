@@ -50,45 +50,48 @@ Welcome to ``cookiecutter_aws_cdk_demo`` Documentation
 .. image:: https://cookiecutter-aws-cdk-demo.readthedocs.io/en/latest/_static/cookiecutter_aws_cdk_demo-logo.png
     :target: https://cookiecutter-aws-cdk-demo.readthedocs.io/en/latest/
 
-A template for a code base that manages multiple AWS CDK stacks. Every stack gets its own set of mise tasks, and the reserved slug ``all`` runs the same action on every stack. The sample stack holds one SSM parameter, ``/cookiecutter-aws-cdk-demo/hello``, with the value ``hello world``.
+A template for a code base that manages multiple AWS CDK stacks. Every stack gets its own set of mise tasks, and the reserved short name ``all`` runs the same action on every stack. The sample stack holds one SSM parameter, ``/cookiecutter-aws-cdk-demo-<env>/hello``, with the value ``hello world``.
 
 
 Stack Workflow
 ------------------------------------------------------------------------------
-Each stack has five tasks, ``cdk-<action>-<slug>``, where ``<slug>`` is the stack's construct ID (also its CloudFormation stack name), such as ``cookiecutter-aws-cdk-demo-param``:
+Each stack has five tasks, ``cdk-<action>-<short_name>``, such as ``cdk-up-param``. The stack's construct ID is its full CloudFormation stack name, ``<project>-<env>-<short_name>`` (such as ``cookiecutter-aws-cdk-demo-dev-param``), and the task selects it with the glob ``'cookiecutter-aws-cdk-demo-*-param'``; the cdk app only holds the stacks of the current environment:
 
 .. list-table::
     :header-rows: 1
 
     * - Task
       - What it does
-    * - ``cdk-synth-<slug>``
+    * - ``cdk-synth-<short_name>``
       - Synthesize the CloudFormation template; changes nothing in AWS
-    * - ``cdk-plan-<slug>``
+    * - ``cdk-plan-<short_name>``
       - Diff against what is deployed, through a CloudFormation change set; deploys nothing
-    * - ``cdk-up-<slug>``
+    * - ``cdk-up-<short_name>``
       - Deploy, without an approval prompt
-    * - ``cdk-down-<slug>``
+    * - ``cdk-down-<short_name>``
       - Destroy, without confirmation
-    * - ``cdk-down-ask-<slug>``
+    * - ``cdk-down-ask-<short_name>``
       - Destroy, after a confirmation prompt
 
-``cdk-<action>-all`` runs the action on every stack, so no stack may have the ID ``all``.
+``cdk-<action>-all`` runs the action on every stack, so no stack may have the short name ``all``.
+
+Every cdk command first checks that the boto session (``AWS_PROFILE``) points at the ``aws_account_id`` and ``aws_region`` of the config, and stops if not. Every stack is also bound to that account and region.
 
 Setup: copy ``.env.example`` to ``.env`` and set ``AWS_PROFILE``; mise loads it for every task. Then, for example:
 
 .. code-block:: bash
 
-    mise run cdk-plan-cookiecutter-aws-cdk-demo-param
+    mise run cdk-plan-param
     mise run cdk-up-all
 
 Config lives in ``config/*.json5`` (json5 allows comments). ``Config.load_from_local_config_file`` merges, in order, ``config-shared.json5``, ``config-shared-secret.json5``, ``config-<env>.json5`` and ``config-<env>-secret.json5``, a later file overriding the keys of an earlier one. The ``-secret`` files are git-ignored and optional; ``config/example/`` shows the shape of each file. Deploys run only from a local machine: ``Config.load`` refuses any other runtime.
 
 To add a stack:
 
-1. Write the stack class in ``cookiecutter_aws_cdk_demo/cdk/stacks/``.
-2. Add a ``@cached_property`` that returns it to ``StackEnum`` in ``cookiecutter_aws_cdk_demo/cdk/stack_enum.py``, with the ID from ``self.one.config.get_stack_id("<short_name>")``.
-3. Run ``mise run cdk-gen-tasks``. It rewrites the block between ``# <cdk-stack-tasks>`` and ``# </cdk-stack-tasks>`` in ``mise.toml``; never edit that block by hand. A unit test fails while the block is out of date.
+1. In ``cookiecutter_aws_cdk_demo/config/``, add ``stack_short_name_<x>`` to ``Config`` and ``cft_stack_name_<x>`` / ``cft_stack_url_<x>`` to ``ConfigNameMixin`` (``config_01_name.py``), next to the names of the resources the stack holds. Names are built only there.
+2. Write the stack class in ``cookiecutter_aws_cdk_demo/cdk/stacks/``, taking ``(scope, id, config, **kwargs)``.
+3. Add a ``@cached_property`` that builds it to ``StackEnum`` in ``cookiecutter_aws_cdk_demo/cdk/stack_enum.py``, with ``id=self.config.cft_stack_name_<x>``, ``config=self.config`` and ``env=self.cdk_env``.
+4. Run ``mise run cdk-gen-tasks``. It rewrites the block between ``# <cdk-stack-tasks>`` and ``# </cdk-stack-tasks>`` in ``mise.toml``; never edit that block by hand. A unit test fails while the block is out of date.
 
 
 .. _install:

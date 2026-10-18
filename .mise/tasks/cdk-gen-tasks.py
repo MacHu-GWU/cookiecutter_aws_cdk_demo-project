@@ -10,13 +10,14 @@ from cookiecutter_aws_cdk_demo.cdk.mise_tasks import update_mise_toml
 
 
 def main():
-    stack_ids = [stack.node.id for stack in stack_enum.stacks]
+    short_names = stack_enum.stack_short_names
     changed = update_mise_toml(
         path=path_enum.path_mise_toml,
-        stack_ids=stack_ids,
+        project_name_slug=stack_enum.config.project_name_slug,
+        short_names=short_names,
     )
     if changed:
-        print(f"Updated {path_enum.path_mise_toml} for stacks: {stack_ids}")
+        print(f"Updated {path_enum.path_mise_toml} for stacks: {short_names}")
     else:
         print(f"{path_enum.path_mise_toml} is already up to date")
 

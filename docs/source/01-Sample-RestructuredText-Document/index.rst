@@ -38,14 +38,14 @@ Always write the full dotted path from the defining module, then choose how it i
       - :class:`~cookiecutter_aws_cdk_demo.config.config_00_main.Config`
     * - ``:class:`cookiecutter_aws_cdk_demo.config.config_00_main.Config```
       - :class:`cookiecutter_aws_cdk_demo.config.config_00_main.Config`
-    * - ``:meth:`Config.get_stack_id <cookiecutter_aws_cdk_demo.config.config_00_main.Config.get_stack_id>```
-      - :meth:`Config.get_stack_id <cookiecutter_aws_cdk_demo.config.config_00_main.Config.get_stack_id>`
+    * - ``:meth:`Config.get_cft_stack_name <cookiecutter_aws_cdk_demo.config.config_01_name.ConfigNameMixin.get_cft_stack_name>```
+      - :meth:`Config.get_cft_stack_name <cookiecutter_aws_cdk_demo.config.config_01_name.ConfigNameMixin.get_cft_stack_name>`
     * - ``:func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks```
       - :func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks`
     * - ``:func:`mise_tasks.render_cdk_tasks <cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks>```
       - :func:`mise_tasks.render_cdk_tasks <cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks>`
-    * - ``:func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.validate_stack_ids```
-      - :func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.validate_stack_ids`
+    * - ``:func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.validate_short_names```
+      - :func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.validate_short_names`
     * - ``:attr:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.ALL```
       - :attr:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.ALL`
     * - ``:attr:`Config.project_name <cookiecutter_aws_cdk_demo.config.config_00_main.Config.project_name>```
@@ -69,7 +69,7 @@ A code block:
 
     from cookiecutter_aws_cdk_demo.api import Config
 
-    print(Config(project_name="my_project").get_stack_id("param"))
+    print(Config.load_from_local_config_file("dev").cft_stack_name_param)
 
 A block pulled from the real source, so it never goes stale:
 

@@ -4,24 +4,13 @@ from cookiecutter_aws_cdk_demo.config.config_00_main import Config
 
 import pytest
 
-
-def _make_config(project_name: str) -> Config:
-    return Config(project_name=project_name, env_name="dev", hello_value="hi")
+from pydantic import ValidationError
 
 
 class TestConfig:
-    @pytest.mark.parametrize(
-        "project_name",
-        [
-            "my_project",
-            "my-project",
-        ],
-    )
-    def test_names(self, project_name: str):
-        conf = _make_config(project_name)
-        assert conf.project_name_snake == "my_project"
-        assert conf.project_name_slug == "my-project"
-        assert conf.get_stack_id("param") == "my-project-param"
+    def test_validation(self):
+        with pytest.raises(ValidationError):
+            Config(project_name="my_project")
 
     def test_load_from_local_config_file(self, tmp_path):
         """
@@ -30,10 +19,15 @@ class TestConfig:
         (tmp_path / "config-shared.json5").write_text(
             '{project_name: "a", hello_value: "shared"}'
         )
-        (tmp_path / "config-dev.json5").write_text("// comment\n{hello_value: 'dev'}")
+        (tmp_path / "config-dev.json5").write_text(
+            "// comment\n{aws_account_id: '1', aws_region: 'r', hello_value: 'dev'}"
+        )
         (tmp_path / "config-dev-secret.json5").write_text("{project_name: 'b'}")
         conf = Config.load_from_local_config_file(env_name="dev", dir_config=tmp_path)
-        assert conf == Config(project_name="b", env_name="dev", hello_value="dev")
+        assert conf.project_name == "b"
+        assert conf.env_name == "dev"
+        assert conf.hello_value == "dev"
+        assert conf.stack_short_name_param == "param"
 
     @pytest.mark.parametrize(
         "env_name",
@@ -45,10 +39,12 @@ class TestConfig:
     )
     def test_load(self, env_name: str):
         """
-        The committed config files load for every environment.
+        The committed config files, plus a secret file, load for every environment.
         """
         conf = Config.load(env_name=env_name, runtime_name="local")
         assert conf.env_name == env_name
+        # from the fake secret file in conftest.py, not the real one
+        assert conf.aws_account_id == "111122223333"
 
     def test_load_error(self):
         with pytest.raises(NotImplementedError):

@@ -4,9 +4,7 @@
 The top-level configuration model.
 
 :class:`Config` holds every project-level setting the stacks and scripts need.
-Every name the project puts into AWS is derived from :attr:`Config.project_name`,
-so change it once and every stack ID, CloudFormation stack name, and resource
-name follows.
+Resource names are not written here but derived in ``config_01_name.py``.
 
 To add a group of related settings, put them in a new numbered module
 (``config_01_xxx.py``, ``config_02_xxx.py``, ...) as a mixin or a nested model,
@@ -21,58 +19,42 @@ runtime on purpose.
 
 from __future__ import annotations
 
-import dataclasses
 from pathlib import Path
 
 import json5
+from pydantic import BaseModel
+from pydantic import Field
 
 from ..paths import path_enum
 from ..runtime import RuntimeNameEnum
+from .config_01_name import ConfigNameMixin
 
 
-@dataclasses.dataclass
-class Config:
+class Config(
+    BaseModel,
+    ConfigNameMixin,
+):
     """
-    Project-wide settings. Every name a stack puts into AWS is derived from
-    :attr:`project_name`, so stacks of different projects never collide in one account.
+    Project-wide settings of one environment, validated on load.
+
+    Every resource name is derived from these values in
+    :class:`~cookiecutter_aws_cdk_demo.config.config_01_name.ConfigNameMixin`.
     """
 
     # fmt: off
-    project_name: str = dataclasses.field()  #: Project name in snake_case or slug-case, such as ``my_project``.
-    env_name: str = dataclasses.field()  #: The environment these values are for, such as ``dev``.
-    hello_value: str = dataclasses.field()  #: Value of the sample SSM parameter.
+    project_name: str = Field()  #: Project name in snake_case or slug-case, such as ``my_project``.
+    env_name: str = Field()  #: The environment these values are for, such as ``dev``.
+    aws_account_id: str = Field()  #: The AWS account this environment deploys to, kept in ``config-<env>-secret.json5``; the session must match it.
+    aws_region: str = Field()  #: The AWS region this environment deploys to; the session must match it.
+    hello_value: str = Field()  #: Value of the sample SSM parameter.
+    stack_short_name_param: str = Field(default="param")  #: Short name of the sample stack, also its mise task slug.
     # fmt: on
-
-    @property
-    def project_name_snake(self) -> str:
-        """
-        Project name in snake_case, such as ``my_project``.
-        """
-        return self.project_name.replace("-", "_")
-
-    @property
-    def project_name_slug(self) -> str:
-        """
-        Project name in slug-case, such as ``my-project``.
-        """
-        return self.project_name_snake.replace("_", "-")
-
-    def get_stack_id(self, short_name: str) -> str:
-        """
-        Build a stack's construct ID, which is also its CloudFormation stack name
-        and the ``<slug>`` of its ``cdk-*-<slug>`` mise tasks.
-
-        :param short_name: what the stack holds, in slug-case, such as ``param``.
-
-        :returns: ``<project_name_slug>-<short_name>``, such as ``my-project-param``.
-        """
-        return f"{self.project_name_slug}-{short_name}"
 
     @classmethod
     def load_from_local_config_file(
         cls,
         env_name: str,
-        dir_config: Path = path_enum.dir_config,
+        dir_config: Path | None = None,
     ) -> Config:
         """
         Load the config of one environment from the json5 files in ``dir_config``.
@@ -84,8 +66,10 @@ class Config:
         ``config/example/`` shows the shape of every file.
 
         :param env_name: such as ``dev``, see :class:`~cookiecutter_aws_cdk_demo.env.EnvNameEnum`.
-        :param dir_config: the folder of the config files.
+        :param dir_config: the folder of the config files; defaults to ``path_enum.dir_config``.
         """
+        if dir_config is None:
+            dir_config = path_enum.dir_config
         data = {}
         for name in ["shared", env_name]:
             path = dir_config / f"config-{name}.json5"

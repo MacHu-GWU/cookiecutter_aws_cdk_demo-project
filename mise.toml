@@ -167,34 +167,34 @@ dir = "cdk"
 depends = ["inst"]
 run = "cdk destroy --all"
 
-[tasks."cdk-synth-cookiecutter-aws-cdk-demo-param"]
-description = "⚪ Synthesize stack cookiecutter-aws-cdk-demo-param to CloudFormation templates (no AWS change)"
+[tasks."cdk-synth-param"]
+description = "⚪ Synthesize stack param to CloudFormation templates (no AWS change)"
 dir = "cdk"
 depends = ["inst"]
-run = "cdk synth cookiecutter-aws-cdk-demo-param --exclusively"
+run = "cdk synth 'cookiecutter-aws-cdk-demo-*-param' --exclusively"
 
-[tasks."cdk-plan-cookiecutter-aws-cdk-demo-param"]
-description = "🔵 Plan stack cookiecutter-aws-cdk-demo-param: diff against what is deployed, through a CloudFormation change set (no deploy)"
+[tasks."cdk-plan-param"]
+description = "🔵 Plan stack param: diff against what is deployed, through a CloudFormation change set (no deploy)"
 dir = "cdk"
 depends = ["inst"]
-run = "cdk diff cookiecutter-aws-cdk-demo-param --exclusively --method auto"
+run = "cdk diff 'cookiecutter-aws-cdk-demo-*-param' --exclusively --method auto"
 
-[tasks."cdk-up-cookiecutter-aws-cdk-demo-param"]
-description = "🟢 Deploy stack cookiecutter-aws-cdk-demo-param (no approval prompt)"
+[tasks."cdk-up-param"]
+description = "🟢 Deploy stack param (no approval prompt)"
 dir = "cdk"
 depends = ["inst"]
-run = "cdk deploy cookiecutter-aws-cdk-demo-param --exclusively --require-approval never"
+run = "cdk deploy 'cookiecutter-aws-cdk-demo-*-param' --exclusively --require-approval never"
 
-[tasks."cdk-down-cookiecutter-aws-cdk-demo-param"]
-description = "🔴 Destroy stack cookiecutter-aws-cdk-demo-param (force, no confirmation)"
+[tasks."cdk-down-param"]
+description = "🔴 Destroy stack param (force, no confirmation)"
 dir = "cdk"
 depends = ["inst"]
-run = "cdk destroy cookiecutter-aws-cdk-demo-param --exclusively --force"
+run = "cdk destroy 'cookiecutter-aws-cdk-demo-*-param' --exclusively --force"
 
-[tasks."cdk-down-ask-cookiecutter-aws-cdk-demo-param"]
-description = "🟡 Destroy stack cookiecutter-aws-cdk-demo-param (asks for confirmation)"
+[tasks."cdk-down-ask-param"]
+description = "🟡 Destroy stack param (asks for confirmation)"
 dir = "cdk"
 depends = ["inst"]
-run = "cdk destroy cookiecutter-aws-cdk-demo-param --exclusively"
+run = "cdk destroy 'cookiecutter-aws-cdk-demo-*-param' --exclusively"
 
 # </cdk-stack-tasks>
