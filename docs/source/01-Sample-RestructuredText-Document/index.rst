@@ -32,24 +32,24 @@ Always write the full dotted path from the defining module, then choose how it i
 
     * - Source
       - Rendered
-    * - ``:mod:`cookiecutter_aws_cdk_demo.example_module_1```
-      - :mod:`cookiecutter_aws_cdk_demo.example_module_1`
-    * - ``:class:`~cookiecutter_aws_cdk_demo.example_module_1.Greeter```
-      - :class:`~cookiecutter_aws_cdk_demo.example_module_1.Greeter`
-    * - ``:class:`cookiecutter_aws_cdk_demo.example_module_1.Greeter```
-      - :class:`cookiecutter_aws_cdk_demo.example_module_1.Greeter`
-    * - ``:meth:`Greeter.greet <cookiecutter_aws_cdk_demo.example_module_1.Greeter.greet>```
-      - :meth:`Greeter.greet <cookiecutter_aws_cdk_demo.example_module_1.Greeter.greet>`
-    * - ``:func:`~cookiecutter_aws_cdk_demo.example_module_1.greet```
-      - :func:`~cookiecutter_aws_cdk_demo.example_module_1.greet`
-    * - ``:func:`example_module_1.greet <cookiecutter_aws_cdk_demo.example_module_1.greet>```
-      - :func:`example_module_1.greet <cookiecutter_aws_cdk_demo.example_module_1.greet>`
-    * - ``:func:`~cookiecutter_aws_cdk_demo.example_package_1.example_module_2.multi_two```
-      - :func:`~cookiecutter_aws_cdk_demo.example_package_1.example_module_2.multi_two`
-    * - ``:attr:`~cookiecutter_aws_cdk_demo.example_module_1.DEFAULT_NAME```
-      - :attr:`~cookiecutter_aws_cdk_demo.example_module_1.DEFAULT_NAME`
-    * - ``:attr:`Greeter.greeting <cookiecutter_aws_cdk_demo.example_module_1.Greeter.greeting>```
-      - :attr:`Greeter.greeting <cookiecutter_aws_cdk_demo.example_module_1.Greeter.greeting>`
+    * - ``:mod:`cookiecutter_aws_cdk_demo.config```
+      - :mod:`cookiecutter_aws_cdk_demo.config`
+    * - ``:class:`~cookiecutter_aws_cdk_demo.config.Config```
+      - :class:`~cookiecutter_aws_cdk_demo.config.Config`
+    * - ``:class:`cookiecutter_aws_cdk_demo.config.Config```
+      - :class:`cookiecutter_aws_cdk_demo.config.Config`
+    * - ``:meth:`Config.get_stack_id <cookiecutter_aws_cdk_demo.config.Config.get_stack_id>```
+      - :meth:`Config.get_stack_id <cookiecutter_aws_cdk_demo.config.Config.get_stack_id>`
+    * - ``:func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks```
+      - :func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks`
+    * - ``:func:`mise_tasks.render_cdk_tasks <cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks>```
+      - :func:`mise_tasks.render_cdk_tasks <cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks>`
+    * - ``:func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.validate_stack_ids```
+      - :func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.validate_stack_ids`
+    * - ``:attr:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.ALL```
+      - :attr:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.ALL`
+    * - ``:attr:`Config.project_name <cookiecutter_aws_cdk_demo.config.Config.project_name>```
+      - :attr:`Config.project_name <cookiecutter_aws_cdk_demo.config.Config.project_name>`
     * - ``:class:`pathlib.Path``` (standard library, through intersphinx)
       - :class:`pathlib.Path`
 
@@ -67,19 +67,19 @@ A code block:
 
 .. code-block:: python
 
-    from cookiecutter_aws_cdk_demo.api import Greeter
+    from cookiecutter_aws_cdk_demo.api import Config
 
-    print(Greeter(greeting="Hi").greet("Alice"))
+    print(Config(project_name="my_project").get_stack_id("param"))
 
 A block pulled from the real source, so it never goes stale:
 
-.. literalinclude:: ../../../cookiecutter_aws_cdk_demo/example_module_1.py
+.. literalinclude:: ../../../cookiecutter_aws_cdk_demo/config.py
     :language: python
-    :pyobject: Greeter
+    :pyobject: Config
 
 An API entry embedded in a guide page (``:no-index:`` avoids a duplicate with the API reference):
 
-.. autofunction:: cookiecutter_aws_cdk_demo.example_module_1.greet
+.. autofunction:: cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks
     :no-index:
 
 

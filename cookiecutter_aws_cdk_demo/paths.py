@@ -30,6 +30,12 @@ class PathEnum:
     path_authors = dir_project_root / "AUTHORS.rst"
     path_license = dir_project_root / "LICENSE.txt"
     path_release_history = dir_project_root / "release-history.rst"
+    path_mise_toml = dir_project_root / "mise.toml"
+
+    # CDK
+    dir_cdk = dir_project_root / "cdk"
+    path_cdk_app_py = dir_cdk / "cdk_app.py"
+    dir_cdk_out = dir_cdk / "cdk.out"
 
     # Virtual Environment
     dir_venv = dir_project_root / ".venv"

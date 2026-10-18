@@ -50,7 +50,43 @@ Welcome to ``cookiecutter_aws_cdk_demo`` Documentation
 .. image:: https://cookiecutter-aws-cdk-demo.readthedocs.io/en/latest/_static/cookiecutter_aws_cdk_demo-logo.png
     :target: https://cookiecutter-aws-cdk-demo.readthedocs.io/en/latest/
 
-Documentation for ``cookiecutter_aws_cdk_demo``.
+A template for a code base that manages multiple AWS CDK stacks. Every stack gets its own set of mise tasks, and the reserved slug ``all`` runs the same action on every stack. The sample stack holds one SSM parameter, ``/cookiecutter-aws-cdk-demo/hello``, with the value ``hello world``.
+
+
+Stack Workflow
+------------------------------------------------------------------------------
+Each stack has five tasks, ``cdk-<action>-<slug>``, where ``<slug>`` is the stack's construct ID (also its CloudFormation stack name), such as ``cookiecutter-aws-cdk-demo-param``:
+
+.. list-table::
+    :header-rows: 1
+
+    * - Task
+      - What it does
+    * - ``cdk-synth-<slug>``
+      - Synthesize the CloudFormation template; changes nothing in AWS
+    * - ``cdk-plan-<slug>``
+      - Diff against what is deployed, through a CloudFormation change set; deploys nothing
+    * - ``cdk-up-<slug>``
+      - Deploy, without an approval prompt
+    * - ``cdk-down-<slug>``
+      - Destroy, without confirmation
+    * - ``cdk-down-ask-<slug>``
+      - Destroy, after a confirmation prompt
+
+``cdk-<action>-all`` runs the action on every stack, so no stack may have the ID ``all``.
+
+Setup: copy ``.env.example`` to ``.env`` and set ``AWS_PROFILE``; mise loads it for every task. Then, for example:
+
+.. code-block:: bash
+
+    mise run cdk-plan-cookiecutter-aws-cdk-demo-param
+    mise run cdk-up-all
+
+To add a stack:
+
+1. Write the stack class in ``cookiecutter_aws_cdk_demo/cdk/stacks/``.
+2. Add a ``@cached_property`` that returns it to ``StackEnum`` in ``cookiecutter_aws_cdk_demo/cdk/stack_enum.py``, with the ID from ``config.get_stack_id("<short_name>")``.
+3. Run ``mise run cdk-gen-tasks``. It rewrites the block between ``# <cdk-stack-tasks>`` and ``# </cdk-stack-tasks>`` in ``mise.toml``; never edit that block by hand. A unit test fails while the block is out of date.
 
 
 .. _install:

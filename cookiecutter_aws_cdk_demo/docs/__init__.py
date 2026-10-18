@@ -13,7 +13,7 @@ public_api = [
         "name": name,
         "summary": (getattr(api, name).__doc__ or "").strip().splitlines()[0],
     }
-    for name in ["add_two", "greet", "Greeter"]
+    for name in ["Config", "config"]
 ]
 
 doc_data = {

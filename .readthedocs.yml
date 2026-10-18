@@ -9,6 +9,7 @@ build:
   tools:
     # Only runs pip and the mise.toml lookup below; the docs Python comes from mise.toml.
     python: "3"
+    nodejs: "24" # aws-cdk-lib (jsii) starts node when autodoc imports it
   jobs:
     pre_create_environment:
       # Install uv using pip

@@ -33,14 +33,14 @@ For landing pages and "what's in this section" overviews. Each card is clickable
 
 Card with Header and Footer
 ------------------------------------------------------------------------------
-.. card:: Greeter
+.. card:: Config
     :shadow: md
 
     Header text
     ^^^
-    Body: greets people with a configurable word.
+    Body: project-wide settings shared by every CDK stack.
     +++
-    Footer: see :class:`~cookiecutter_aws_cdk_demo.example_module_1.Greeter`.
+    Footer: see :class:`~cookiecutter_aws_cdk_demo.config.Config`.
 
 
 Tabs
@@ -88,13 +88,13 @@ The same thing in several languages; each tab is labeled with its language.
 
     .. code-block:: python
 
-        from cookiecutter_aws_cdk_demo.api import greet
+        from cookiecutter_aws_cdk_demo.api import config
 
-        greet("Alice")
+        config.get_stack_id("param")
 
     .. code-block:: bash
 
-        python -c 'from cookiecutter_aws_cdk_demo.api import greet; print(greet("Alice"))'
+        python -c 'from cookiecutter_aws_cdk_demo.api import config; print(config.get_stack_id("param"))'
 
 
 Dropdowns

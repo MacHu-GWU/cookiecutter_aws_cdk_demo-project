@@ -5,12 +5,10 @@ from cookiecutter_aws_cdk_demo import api
 
 def test():
     _ = api
-    _ = api.DEFAULT_NAME
-    _ = api.add_two
-    _ = api.greet
-    _ = api.Greeter
-    _ = api.example_package_1
-    _ = api.example_package_1.multi_two
+    _ = api.Config
+    _ = api.config
+    _ = api.cdk
+    _ = api.cdk.stack_enum
 
 
 if __name__ == "__main__":

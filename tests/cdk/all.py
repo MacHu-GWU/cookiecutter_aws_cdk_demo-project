@@ -5,7 +5,7 @@ if __name__ == "__main__":
 
     run_cov_test(
         __file__,
-        "cookiecutter_aws_cdk_demo.example_package_1",
+        "cookiecutter_aws_cdk_demo.cdk",
         is_folder=True,
         preview=False,
     )
