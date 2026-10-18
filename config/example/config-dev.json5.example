@@ -1,0 +1,6 @@
+// Copy to config/config-dev.json5 (same for tst / prd). Values here are placeholders.
+// Settings of one environment; overrides config-shared.json5.
+{
+  // Value of the sample SSM parameter.
+  hello_value: "replace-me",
+}

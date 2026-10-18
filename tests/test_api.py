@@ -5,8 +5,11 @@ from cookiecutter_aws_cdk_demo import api
 
 def test():
     _ = api
+    _ = api.EnvNameEnum
+    _ = api.RuntimeNameEnum
     _ = api.Config
-    _ = api.config
+    _ = api.One
+    _ = api.one
     _ = api.cdk
     _ = api.cdk.stack_enum
 

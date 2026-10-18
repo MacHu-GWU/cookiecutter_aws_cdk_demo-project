@@ -40,7 +40,7 @@ Card with Header and Footer
     ^^^
     Body: project-wide settings shared by every CDK stack.
     +++
-    Footer: see :class:`~cookiecutter_aws_cdk_demo.config.Config`.
+    Footer: see :class:`~cookiecutter_aws_cdk_demo.config.config_00_main.Config`.
 
 
 Tabs
@@ -88,13 +88,13 @@ The same thing in several languages; each tab is labeled with its language.
 
     .. code-block:: python
 
-        from cookiecutter_aws_cdk_demo.api import config
+        from cookiecutter_aws_cdk_demo.api import one
 
-        config.get_stack_id("param")
+        one.config.get_stack_id("param")
 
     .. code-block:: bash
 
-        python -c 'from cookiecutter_aws_cdk_demo.api import config; print(config.get_stack_id("param"))'
+        python -c 'from cookiecutter_aws_cdk_demo.api import one; print(one.config.get_stack_id("param"))'
 
 
 Dropdowns

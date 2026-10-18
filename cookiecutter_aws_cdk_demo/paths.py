@@ -32,6 +32,9 @@ class PathEnum:
     path_release_history = dir_project_root / "release-history.rst"
     path_mise_toml = dir_project_root / "mise.toml"
 
+    # Config files, see Config.load_from_local_config_file
+    dir_config = dir_project_root / "config"
+
     # CDK
     dir_cdk = dir_project_root / "cdk"
     path_cdk_app_py = dir_cdk / "cdk_app.py"

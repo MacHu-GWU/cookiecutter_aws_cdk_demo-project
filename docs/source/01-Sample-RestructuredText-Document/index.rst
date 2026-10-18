@@ -34,12 +34,12 @@ Always write the full dotted path from the defining module, then choose how it i
       - Rendered
     * - ``:mod:`cookiecutter_aws_cdk_demo.config```
       - :mod:`cookiecutter_aws_cdk_demo.config`
-    * - ``:class:`~cookiecutter_aws_cdk_demo.config.Config```
-      - :class:`~cookiecutter_aws_cdk_demo.config.Config`
-    * - ``:class:`cookiecutter_aws_cdk_demo.config.Config```
-      - :class:`cookiecutter_aws_cdk_demo.config.Config`
-    * - ``:meth:`Config.get_stack_id <cookiecutter_aws_cdk_demo.config.Config.get_stack_id>```
-      - :meth:`Config.get_stack_id <cookiecutter_aws_cdk_demo.config.Config.get_stack_id>`
+    * - ``:class:`~cookiecutter_aws_cdk_demo.config.config_00_main.Config```
+      - :class:`~cookiecutter_aws_cdk_demo.config.config_00_main.Config`
+    * - ``:class:`cookiecutter_aws_cdk_demo.config.config_00_main.Config```
+      - :class:`cookiecutter_aws_cdk_demo.config.config_00_main.Config`
+    * - ``:meth:`Config.get_stack_id <cookiecutter_aws_cdk_demo.config.config_00_main.Config.get_stack_id>```
+      - :meth:`Config.get_stack_id <cookiecutter_aws_cdk_demo.config.config_00_main.Config.get_stack_id>`
     * - ``:func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks```
       - :func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks`
     * - ``:func:`mise_tasks.render_cdk_tasks <cookiecutter_aws_cdk_demo.cdk.mise_tasks.render_cdk_tasks>```
@@ -48,8 +48,8 @@ Always write the full dotted path from the defining module, then choose how it i
       - :func:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.validate_stack_ids`
     * - ``:attr:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.ALL```
       - :attr:`~cookiecutter_aws_cdk_demo.cdk.mise_tasks.ALL`
-    * - ``:attr:`Config.project_name <cookiecutter_aws_cdk_demo.config.Config.project_name>```
-      - :attr:`Config.project_name <cookiecutter_aws_cdk_demo.config.Config.project_name>`
+    * - ``:attr:`Config.project_name <cookiecutter_aws_cdk_demo.config.config_00_main.Config.project_name>```
+      - :attr:`Config.project_name <cookiecutter_aws_cdk_demo.config.config_00_main.Config.project_name>`
     * - ``:class:`pathlib.Path``` (standard library, through intersphinx)
       - :class:`pathlib.Path`
 
@@ -73,7 +73,7 @@ A code block:
 
 A block pulled from the real source, so it never goes stale:
 
-.. literalinclude:: ../../../cookiecutter_aws_cdk_demo/config.py
+.. literalinclude:: ../../../cookiecutter_aws_cdk_demo/config/config_00_main.py
     :language: python
     :pyobject: Config
 

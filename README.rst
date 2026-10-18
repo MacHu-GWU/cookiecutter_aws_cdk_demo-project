@@ -82,10 +82,12 @@ Setup: copy ``.env.example`` to ``.env`` and set ``AWS_PROFILE``; mise loads it 
     mise run cdk-plan-cookiecutter-aws-cdk-demo-param
     mise run cdk-up-all
 
+Config lives in ``config/*.json5`` (json5 allows comments). ``Config.load_from_local_config_file`` merges, in order, ``config-shared.json5``, ``config-shared-secret.json5``, ``config-<env>.json5`` and ``config-<env>-secret.json5``, a later file overriding the keys of an earlier one. The ``-secret`` files are git-ignored and optional; ``config/example/`` shows the shape of each file. Deploys run only from a local machine: ``Config.load`` refuses any other runtime.
+
 To add a stack:
 
 1. Write the stack class in ``cookiecutter_aws_cdk_demo/cdk/stacks/``.
-2. Add a ``@cached_property`` that returns it to ``StackEnum`` in ``cookiecutter_aws_cdk_demo/cdk/stack_enum.py``, with the ID from ``config.get_stack_id("<short_name>")``.
+2. Add a ``@cached_property`` that returns it to ``StackEnum`` in ``cookiecutter_aws_cdk_demo/cdk/stack_enum.py``, with the ID from ``self.one.config.get_stack_id("<short_name>")``.
 3. Run ``mise run cdk-gen-tasks``. It rewrites the block between ``# <cdk-stack-tasks>`` and ``# </cdk-stack-tasks>`` in ``mise.toml``; never edit that block by hand. A unit test fails while the block is out of date.
 
 

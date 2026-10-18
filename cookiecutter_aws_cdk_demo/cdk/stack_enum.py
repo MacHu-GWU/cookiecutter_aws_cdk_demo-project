@@ -11,8 +11,8 @@ from functools import cached_property
 
 import aws_cdk as cdk
 
-from ..config import Config
-from ..config import config
+from ..one.api import One
+from ..one.api import one
 from .stacks.param_stack import ParamStack
 
 
@@ -29,7 +29,7 @@ class StackEnum:
 
     # fmt: off
     app: cdk.App = dataclasses.field()  #: The CDK app that owns every stack.
-    config: Config = dataclasses.field()  #: The project configuration.
+    one: One = dataclasses.field()  #: The project singleton passed to every stack.
     # fmt: on
 
     @cached_property
@@ -39,8 +39,8 @@ class StackEnum:
         """
         return ParamStack(
             scope=self.app,
-            id=self.config.get_stack_id("param"),
-            config=self.config,
+            id=self.one.config.get_stack_id("param"),
+            one=self.one,
         )
 
     @property
@@ -48,7 +48,7 @@ class StackEnum:
         """
         Every stack, in the order the properties are defined in this class.
 
-        Any ``@cached_property`` of this class that returns a :class:`aws_cdk.Stack`
+        Any ``@cached_property`` of this class that returns an ``aws_cdk.Stack``
         counts, so a new stack needs no second registration here.
         """
         stacks = []
@@ -69,7 +69,7 @@ class StackEnum:
 
 stack_enum = StackEnum(
     app=cdk.App(),
-    config=config,
+    one=one,
 )
 """
 The stack registry of this project; ``cdk/cdk_app.py`` synthesizes it.
