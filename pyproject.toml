@@ -37,8 +37,9 @@ classifiers = [
 # Edit these lists, then ``mise run inst`` to update ``uv.lock`` and ``.venv``.
 dependencies = [
     "aws-cdk-lib>=2.273.0,<3.0.0", # AWS CDK constructs, synthesized to CloudFormation
-    "constructs>=10.8.1,<11.0.0", # base Construct class used in stack signatures
     "boto3>=1.42.97,<2.0.0", # AWS SDK, behind one.boto_ses
+    "boto-session-manager>=2.1.1,<3.0.0", # one boto session per environment, one.bsm_enum
+    "cdk-mate>=1.0.0,<2.0.0", # run the cdk CLI from Python with an environment's boto session
     "json5>=0.17.3,<1.0.0", # parse the config/*.json5 files (comments allowed)
     "pydantic>=2.14.1,<3.0.0", # validate the Config model
 ]

@@ -1,8 +1,8 @@
 // Settings of the prd environment; overrides config-shared.json5.
 {
   // The region this environment deploys to; aws_account_id is in the -secret file.
-  // Every cdk command stops if the boto session (AWS_PROFILE) points anywhere else.
+  // Every cdk command stops if the AWS profile of the environment (AWS_PROFILE_<ENV> in .env) points anywhere else.
   aws_region: "us-east-1",
-  // Value of the sample SSM parameter.
-  hello_value: "hello world",
+  // Log level of this environment, stored in an SSM parameter by the alerts stack.
+  log_level: "WARNING",
 }

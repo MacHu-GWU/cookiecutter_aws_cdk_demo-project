@@ -5,7 +5,9 @@ The ``One`` class: a single entry point to every project-level singleton.
 
 Instead of importing ``env``, ``runtime``, the config, and the boto session from
 four places, code imports ``one`` and reads ``one.env``, ``one.runtime``,
-``one.config``, ``one.boto_ses``, and so on.
+``one.config``, ``one.boto_ses``, and so on. Everything environment specific
+(``one.config``, ``one.bsm``, ``one.stack_ctx_enum``, ``one.stack_enum``) belongs to
+the current environment, ``one.env.current_env_name``, set by ``ENV_NAME``.
 
 **Why mixins:** each concern lives in its own numbered module (``one_01_config.py``,
 ``one_02_boto_ses.py``, ...), so a reader looking for "how is the boto session
@@ -27,11 +29,13 @@ from ..env import env
 from ..runtime import runtime
 from .one_01_config import OneConfigMixin
 from .one_02_boto_ses import OneBotoSesMixin
+from .one_03_cdk import OneCdkMixin
 
 
 class One(
     OneConfigMixin,
     OneBotoSesMixin,
+    OneCdkMixin,
 ):
     """
     Aggregates every project-level singleton. Use the module-level :data:`~cookiecutter_aws_cdk_demo.one.one_00_main.one`.

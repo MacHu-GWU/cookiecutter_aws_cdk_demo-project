@@ -1,26 +1,33 @@
 # -*- coding: utf-8 -*-
 
 """
-Generate the per-stack ``cdk-*`` mise tasks from the stack short names.
+Generate the ``cdk-*`` mise tasks: one per (action, environment, stack).
 
-Each stack gets five tasks named ``cdk-<action>-<short_name>``, and the reserved
-short name ``all`` runs the action on every stack. A stack's construct ID is its
-full name, ``<project>-<env>-<short_name>``, which depends on the environment, so a
-task selects the stack with the glob ``'<project>-*-<short_name>'``; the cdk app
-only ever holds the stacks of one environment.
+Each (environment, stack) pair gets four tasks named ``cdk-<action>-<env>-<stack>-stack``,
+such as ``cdk-up-dev-alerts-stack``; the ``-stack`` ending marks a task that acts on
+one stack only. ``cdk-<action>-<env>-all`` runs the action on every stack, so no
+stack may be named ``all``. Each task sets ``ENV_NAME`` for its process and runs one line,
+``cdk/cdk_cmd.py <action> <stack>`` (see :mod:`~cookiecutter_aws_cdk_demo.cdk.cdk_cmd`),
+which uses the AWS profile of that environment, so a human never picks a profile
+or an environment by hand.
+
+The stacks come from the entry names of
+:class:`~cookiecutter_aws_cdk_demo.cdk.stack_ctx_enum.StackCtxEnum`, read from the
+class alone, and the environments from :class:`~cookiecutter_aws_cdk_demo.env.EnvNameEnum`:
+generating loads no config and makes no AWS call.
 The tasks live in ``mise.toml`` between :data:`BEGIN_MARKER` and :data:`END_MARKER`;
 ``mise run cdk-gen-tasks`` rewrites that block and leaves the rest of the file alone.
 """
 
 from __future__ import annotations
 
-import dataclasses
 from pathlib import Path
 
-ALL = "all"
-"""
-The reserved short name that targets every stack; no stack may use it.
-"""
+from ..env import ENV_NAME_VAR
+from .cdk_cmd import ALL
+from .cdk_cmd import CDK_ACTIONS
+from .cdk_cmd import CdkAction
+from .cdk_cmd import to_stack_slug
 
 BEGIN_MARKER = "# <cdk-stack-tasks>"
 """
@@ -33,144 +40,86 @@ The line that closes the generated block in ``mise.toml``.
 """
 
 
-@dataclasses.dataclass(frozen=True)
-class CdkAction:
+def validate_stacks(stacks: list[str]) -> None:
     """
-    One kind of ``cdk-<name>-<slug>`` task.
+    Check that the stack names can be used in task names.
+
+    :raises ValueError: a stack is named :data:`~cookiecutter_aws_cdk_demo.cdk.cdk_cmd.ALL`,
+        or two stacks share a slug.
     """
-
-    # fmt: off
-    name: str = dataclasses.field()  #: The action part of the task name, such as ``up``.
-    emoji: str = dataclasses.field()  #: Shown in front of the task description.
-    summary: str = dataclasses.field()  #: The task description, with ``{target}`` as a placeholder.
-    one_stack: str = dataclasses.field()  #: The cdk command for one stack, with ``{selector}`` as a placeholder for its glob.
-    all_stacks: str = dataclasses.field()  #: The cdk command for every stack.
-    # fmt: on
-
-
-CDK_ACTIONS: list[CdkAction] = [
-    # fmt: off
-    CdkAction(
-        name="synth",
-        emoji="⚪",
-        summary="Synthesize {target} to CloudFormation templates (no AWS change)",
-        one_stack="cdk synth {selector} --exclusively",
-        all_stacks="cdk synth --all",
-    ),
-    CdkAction(
-        name="plan",
-        emoji="🔵",
-        summary="Plan {target}: diff against what is deployed, through a CloudFormation change set (no deploy)",
-        one_stack="cdk diff {selector} --exclusively --method auto",
-        all_stacks="cdk diff --all --method auto",
-    ),
-    CdkAction(
-        name="up",
-        emoji="🟢",
-        summary="Deploy {target} (no approval prompt)",
-        one_stack="cdk deploy {selector} --exclusively --require-approval never",
-        all_stacks="cdk deploy --all --require-approval never",
-    ),
-    CdkAction(
-        name="down",
-        emoji="🔴",
-        summary="Destroy {target} (force, no confirmation)",
-        one_stack="cdk destroy {selector} --exclusively --force",
-        all_stacks="cdk destroy --all --force",
-    ),
-    CdkAction(
-        name="down-ask",
-        emoji="🟡",
-        summary="Destroy {target} (asks for confirmation)",
-        one_stack="cdk destroy {selector} --exclusively",
-        all_stacks="cdk destroy --all",
-    ),
-    # fmt: on
-]
-"""
-The five actions every stack gets, in the order they appear in ``mise.toml``.
-"""
-
-
-def validate_short_names(short_names: list[str]) -> None:
-    """
-    Check that the short names can be used as task names and globs.
-
-    :raises ValueError: a name is the reserved :data:`ALL`, two stacks share a name,
-        or one name ends with ``-<another name>`` (its glob would match both stacks).
-    """
-    if ALL in short_names:
+    slugs = [to_stack_slug(stack) for stack in stacks]
+    if ALL in slugs:
         raise ValueError(
-            f"short name {ALL!r} is reserved for the cdk-*-{ALL} tasks, rename the stack"
+            f"stack name {ALL!r} is reserved for the cdk-*-{ALL} tasks, rename the stack"
         )
-    if len(set(short_names)) != len(short_names):
-        raise ValueError(f"duplicate stack short name in {short_names}")
-    for a in short_names:
-        for b in short_names:
-            if a.endswith(f"-{b}"):
-                raise ValueError(
-                    f"short name {a!r} ends with '-{b}', so the glob of {b!r} matches both"
-                )
+    if len(set(slugs)) != len(slugs):
+        raise ValueError(f"duplicate stack name in {stacks}")
 
 
-def get_stack_selector(project_name_slug: str, short_name: str) -> str:
+def get_task_name(
+    action_name: str,
+    env_name: str,
+    stack_slug: str,
+) -> str:
     """
-    The glob that selects one stack in any environment, such as ``my-project-*-param``.
+    The name of a generated task: ``cdk-<action>-<env>-all`` for every stack,
+    ``cdk-<action>-<env>-<stack>-stack`` for one, such as ``cdk-up-dev-alerts-stack``.
     """
-    return f"{project_name_slug}-*-{short_name}"
+    if stack_slug == ALL:
+        return f"cdk-{action_name}-{env_name}-{ALL}"
+    return f"cdk-{action_name}-{env_name}-{stack_slug}-stack"
 
 
 def _render_task(
     action: CdkAction,
-    slug: str,
+    env_name: str,
+    stack_slug: str,
     target: str,
-    command: str,
 ) -> str:
+    summary = action.summary.format(target=target, env=env_name)
+    task_name = get_task_name(action.name, env_name, stack_slug)
     lines = [
-        f'[tasks."cdk-{action.name}-{slug}"]',
-        f'description = "{action.emoji} {action.summary.format(target=target)}"',
-        'dir = "cdk"',
+        f'[tasks."{task_name}"]',
+        f'description = "{action.emoji} {summary}"',
+        f'env = {{ {ENV_NAME_VAR} = "{env_name}" }}',
         'depends = ["inst"]',
-        f'run = "{command}"',
+        f'run = ".venv/bin/python cdk/cdk_cmd.py {action.name} {stack_slug}"',
     ]
     return "\n".join(lines)
 
 
 def render_cdk_tasks(
-    project_name_slug: str,
-    short_names: list[str],
+    stacks: list[str],
+    env_names: list[str],
 ) -> str:
     """
-    Render the whole generated block, markers included, for these stacks.
+    Render the whole generated block, markers included.
 
-    The ``all`` tasks come first, then the tasks of each stack in the given order.
+    Tasks are grouped by environment; in each, the ``all`` tasks come first,
+    then each stack in the given order.
 
-    :raises ValueError: see :func:`validate_short_names`.
+    :raises ValueError: see :func:`validate_stacks`.
     """
-    validate_short_names(short_names)
+    validate_stacks(stacks)
     header = (
         f"{BEGIN_MARKER}\n"
-        "# Generated by ``mise run cdk-gen-tasks`` from StackEnum. Do not edit by hand."
+        "# Generated by ``mise run cdk-gen-tasks`` from StackCtxEnum. Do not edit by hand."
     )
     parts = [header]
-    for action in CDK_ACTIONS:
-        task = _render_task(
-            action=action,
-            slug=ALL,
-            target="all stacks",
-            command=action.all_stacks,
-        )
-        parts.append(task)
-    for short_name in short_names:
-        selector = get_stack_selector(project_name_slug, short_name)
-        for action in CDK_ACTIONS:
-            task = _render_task(
-                action=action,
-                slug=short_name,
-                target=f"stack {short_name}",
-                command=action.one_stack.format(selector=f"'{selector}'"),
-            )
-            parts.append(task)
+    targets = [(ALL, "all stacks")]
+    for stack in stacks:
+        slug = to_stack_slug(stack)
+        targets.append((slug, f"stack {slug}"))
+    for env_name in env_names:
+        for stack_slug, target in targets:
+            for action in CDK_ACTIONS:
+                task = _render_task(
+                    action=action,
+                    env_name=env_name,
+                    stack_slug=stack_slug,
+                    target=target,
+                )
+                parts.append(task)
     parts.append(END_MARKER)
     return "\n\n".join(parts)
 
@@ -196,8 +145,8 @@ def replace_cdk_tasks_block(text: str, block: str) -> str:
 
 def update_mise_toml(
     path: Path,
-    project_name_slug: str,
-    short_names: list[str],
+    stacks: list[str],
+    env_names: list[str],
 ) -> bool:
     """
     Rewrite the generated block of the ``mise.toml`` at ``path``.
@@ -205,7 +154,7 @@ def update_mise_toml(
     :returns: ``True`` if the file changed, ``False`` if it was already up to date.
     """
     text = path.read_text(encoding="utf-8")
-    block = render_cdk_tasks(project_name_slug, short_names)
+    block = render_cdk_tasks(stacks, env_names)
     new_text = replace_cdk_tasks_block(text, block)
     if new_text == text:
         return False

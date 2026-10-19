@@ -13,9 +13,11 @@ from cookiecutter_aws_cdk_demo.config.api import Config
 def local_runtime(monkeypatch):
     """
     Run every test as the local runtime, the only one that can load the config,
-    even on a CI runner (which sets ``CI``).
+    even on a CI runner (which sets ``CI``), and in the ``dev`` environment,
+    whatever ``ENV_NAME`` the shell or ``.env`` sets.
     """
     monkeypatch.delenv("CI", raising=False)
+    monkeypatch.setenv("ENV_NAME", "dev")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -47,5 +49,5 @@ def config() -> Config:
         env_name="dev",
         aws_account_id="111122223333",
         aws_region="us-east-1",
-        hello_value="hi",
+        log_level="DEBUG",
     )

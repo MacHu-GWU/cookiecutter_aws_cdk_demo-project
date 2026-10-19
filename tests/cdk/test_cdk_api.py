@@ -5,13 +5,18 @@ from cookiecutter_aws_cdk_demo.cdk import api
 
 def test():
     _ = api
-    _ = api.ParamStack
+    _ = api.AlertsStack
+    _ = api.AlertsStackExports
+    _ = api.PublisherStack
+    _ = api.PublisherStackExports
+    _ = api.StackCtxEnum
+    _ = api.list_entry_names
     _ = api.StackEnum
-    _ = api.stack_enum
     _ = api.ALL
     _ = api.CdkAction
     _ = api.CDK_ACTIONS
-    _ = api.get_stack_selector
+    _ = api.build_cdk_cmd
+    _ = api.run_cdk_cmd
     _ = api.render_cdk_tasks
     _ = api.update_mise_toml
 

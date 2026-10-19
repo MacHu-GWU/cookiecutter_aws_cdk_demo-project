@@ -50,48 +50,73 @@ Welcome to ``cookiecutter_aws_cdk_demo`` Documentation
 .. image:: https://cookiecutter-aws-cdk-demo.readthedocs.io/en/latest/_static/cookiecutter_aws_cdk_demo-logo.png
     :target: https://cookiecutter-aws-cdk-demo.readthedocs.io/en/latest/
 
-A template for a code base that manages multiple AWS CDK stacks. Every stack gets its own set of mise tasks, and the reserved short name ``all`` runs the same action on every stack. The sample stack holds one SSM parameter, ``/cookiecutter-aws-cdk-demo-<env>/hello``, with the value ``hello world``.
+A template for a code base that manages several AWS CDK stacks across several environments (``dev``, ``tst``, ``prd``), built on `cdk_mate <https://github.com/MacHu-GWU/cdk_mate-project>`_. Two sample stacks show the pattern, both free while idle:
+
+- **alerts** (``cdk/stacks/alerts_stack.py``, a simple stack in one file): an SNS topic and an SSM parameter holding the environment's log level.
+- **publisher** (``cdk/stacks/publisher_stack/``, the folder form with one mixin per resource group): an IAM role allowed to publish to the alerts topic, and an SSM parameter with the topic ARN. It depends on the alerts stack of the same environment.
+
+Each stack has a ``<name>_stack_exports.py`` that imports nothing from this project, so another project copies that one file to read the stack's outputs. A unit test checks that its literal stack names and output keys match the real stack.
 
 
 Stack Workflow
 ------------------------------------------------------------------------------
-Each stack has five tasks, ``cdk-<action>-<short_name>``, such as ``cdk-up-param``. The stack's construct ID is its full CloudFormation stack name, ``<project>-<env>-<short_name>`` (such as ``cookiecutter-aws-cdk-demo-dev-param``), and the task selects it with the glob ``'cookiecutter-aws-cdk-demo-*-param'``; the cdk app only holds the stacks of the current environment:
+Every (environment, stack) pair gets four mise tasks, ``cdk-<action>-<env>-<stack>-stack``; the ``-stack`` ending marks a task that acts on one stack only. ``cdk-<action>-<env>-all`` runs the action on every stack of the environment, so no stack may be named ``all``:
 
 .. list-table::
     :header-rows: 1
 
     * - Task
       - What it does
-    * - ``cdk-synth-<short_name>``
-      - Synthesize the CloudFormation template; changes nothing in AWS
-    * - ``cdk-plan-<short_name>``
+    * - ``cdk-synth-<env>-<stack>-stack``
+      - Synthesize the CloudFormation template; no AWS call
+    * - ``cdk-plan-<env>-<stack>-stack``
       - Diff against what is deployed, through a CloudFormation change set; deploys nothing
-    * - ``cdk-up-<short_name>``
+    * - ``cdk-up-<env>-<stack>-stack``
       - Deploy, without an approval prompt
-    * - ``cdk-down-<short_name>``
+    * - ``cdk-down-<env>-<stack>-stack``
       - Destroy, without confirmation
-    * - ``cdk-down-ask-<short_name>``
-      - Destroy, after a confirmation prompt
 
-``cdk-<action>-all`` runs the action on every stack, so no stack may have the short name ``all``.
+Each task sets ``ENV_NAME=<env>`` for its process and runs one line, ``.venv/bin/python cdk/cdk_cmd.py <action> <stack>``, which runs the cdk command with the AWS profile of that environment and logs the command line first. A single stack runs with ``--exclusively``; ``all`` lets the cdk CLI order the stacks by their dependencies.
 
-Every cdk command first checks that the boto session (``AWS_PROFILE``) points at the ``aws_account_id`` and ``aws_region`` of the config, and stops if not. Every stack is also bound to that account and region.
-
-Setup: copy ``.env.example`` to ``.env`` and set ``AWS_PROFILE``; mise loads it for every task. Then, for example:
+Setup: copy ``.env.example`` to ``.env`` and set ``AWS_PROFILE_DEV``, ``AWS_PROFILE_TST`` and ``AWS_PROFILE_PRD``; mise loads it for every task. An environment without one falls back to the default credential chain. ``ENV_NAME`` in ``.env`` sets the current environment for everything else (default ``dev``). Every stack is bound to the ``aws_account_id`` and ``aws_region`` of its config, so the cdk CLI refuses to deploy it with the credentials of another account. Then, for example:
 
 .. code-block:: bash
 
-    mise run cdk-plan-param
-    mise run cdk-up-all
+    mise run cdk-plan-dev-alerts-stack
+    mise run cdk-up-dev-all
 
 Config lives in ``config/*.json5`` (json5 allows comments). ``Config.load_from_local_config_file`` merges, in order, ``config-shared.json5``, ``config-shared-secret.json5``, ``config-<env>.json5`` and ``config-<env>-secret.json5``, a later file overriding the keys of an earlier one. The ``-secret`` files are git-ignored and optional; ``config/example/`` shows the shape of each file. Deploys run only from a local machine: ``Config.load`` refuses any other runtime.
 
+How the code is organized: everything environment specific is a lazy property of ``one`` and belongs to the **current environment**, ``one.env.current_env_name``, which the ``ENV_NAME`` environment variable selects (default ``dev``):
+
+.. list-table::
+    :header-rows: 1
+
+    * - ``one.<name>``
+      - What it is
+      - Module
+    * - ``config``
+      - the ``Config`` of the current environment
+      - ``config/config_00_main.py``
+    * - ``bsm``
+      - its boto session: locally the profile ``AWS_PROFILE_<ENV>``, otherwise (CI) the default credential chain
+      - ``one/one_02_boto_ses.py``
+    * - ``stack_ctx_enum``
+      - one ``cdk_mate.StackCtx`` per stack, with names, account, region and session; what ``cdk_cmd.py`` uses
+      - ``cdk/stack_ctx_enum.py``
+    * - ``stack_enum``
+      - one CDK stack per stack, created in one ``cdk.App``; what ``cdk/cdk_app.py`` synthesizes
+      - ``cdk/stack_enum.py``
+
+So the cdk app only holds the stacks of one environment, with construct IDs such as ``CookiecutterAwsCdkDemoPrdAlerts``. The cdk CLI passes ``ENV_NAME`` on to the app, so ``ENV_NAME=prd cdk synth`` synthesizes prd, and deploying dev does not need the prd config.
+
 To add a stack:
 
-1. In ``cookiecutter_aws_cdk_demo/config/``, add ``stack_short_name_<x>`` to ``Config`` and ``cft_stack_name_<x>`` / ``cft_stack_url_<x>`` to ``ConfigNameMixin`` (``config_01_name.py``), next to the names of the resources the stack holds. Names are built only there.
-2. Write the stack class in ``cookiecutter_aws_cdk_demo/cdk/stacks/``, taking ``(scope, id, config, **kwargs)``.
-3. Add a ``@cached_property`` that builds it to ``StackEnum`` in ``cookiecutter_aws_cdk_demo/cdk/stack_enum.py``, with ``id=self.config.cft_stack_name_<x>``, ``config=self.config`` and ``env=self.cdk_env``.
-4. Run ``mise run cdk-gen-tasks``. It rewrites the block between ``# <cdk-stack-tasks>`` and ``# </cdk-stack-tasks>`` in ``mise.toml``; never edit that block by hand. A unit test fails while the block is out of date.
+1. In ``cookiecutter_aws_cdk_demo/config/config_01_name.py``, add ``cft_stack_name_<x>`` / ``cft_stack_url_<x>`` and the names of the resources the stack holds. Names are built only there.
+2. Write the stack in ``cookiecutter_aws_cdk_demo/cdk/stacks/``: ``<x>_stack.py``, or ``<x>_stack/stack.py`` plus ``stack_0N_<topic>.py`` mixins once it grows. It takes ``(scope, id, stack_name, env, config)`` plus the resources of other stacks it uses.
+3. Add a ``<x>`` entry to ``StackCtxEnum`` and ``StackEnum``, after the stacks it depends on.
+4. Add ``<x>_stack_exports.py`` and its test if other projects need its outputs.
+5. Run ``mise run cdk-gen-tasks``. It rewrites the block between ``# <cdk-stack-tasks>`` and ``# </cdk-stack-tasks>`` in ``mise.toml``; never edit that block by hand. A unit test fails while the block is out of date.
 
 
 .. _install:

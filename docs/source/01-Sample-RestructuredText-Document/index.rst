@@ -69,7 +69,7 @@ A code block:
 
     from cookiecutter_aws_cdk_demo.api import Config
 
-    print(Config.load_from_local_config_file("dev").cft_stack_name_param)
+    print(Config.load_from_local_config_file("dev").cft_stack_name_alerts)
 
 A block pulled from the real source, so it never goes stale:
 

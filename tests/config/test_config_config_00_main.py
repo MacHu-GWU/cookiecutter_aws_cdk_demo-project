@@ -17,17 +17,16 @@ class TestConfig:
         Later files override earlier ones, and a missing secret file is skipped.
         """
         (tmp_path / "config-shared.json5").write_text(
-            '{project_name: "a", hello_value: "shared"}'
+            '{project_name: "a", log_level: "shared"}'
         )
         (tmp_path / "config-dev.json5").write_text(
-            "// comment\n{aws_account_id: '1', aws_region: 'r', hello_value: 'dev'}"
+            "// comment\n{aws_account_id: '1', aws_region: 'r', log_level: 'dev'}"
         )
         (tmp_path / "config-dev-secret.json5").write_text("{project_name: 'b'}")
         conf = Config.load_from_local_config_file(env_name="dev", dir_config=tmp_path)
         assert conf.project_name == "b"
         assert conf.env_name == "dev"
-        assert conf.hello_value == "dev"
-        assert conf.stack_short_name_param == "param"
+        assert conf.log_level == "dev"
 
     @pytest.mark.parametrize(
         "env_name",

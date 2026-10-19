@@ -46,8 +46,7 @@ class Config(
     env_name: str = Field()  #: The environment these values are for, such as ``dev``.
     aws_account_id: str = Field()  #: The AWS account this environment deploys to, kept in ``config-<env>-secret.json5``; the session must match it.
     aws_region: str = Field()  #: The AWS region this environment deploys to; the session must match it.
-    hello_value: str = Field()  #: Value of the sample SSM parameter.
-    stack_short_name_param: str = Field(default="param")  #: Short name of the sample stack, also its mise task slug.
+    log_level: str = Field()  #: Log level of this environment, such as ``DEBUG``; the alerts stack stores it in SSM.
     # fmt: on
 
     @classmethod

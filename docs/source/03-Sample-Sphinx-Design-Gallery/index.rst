@@ -90,11 +90,11 @@ The same thing in several languages; each tab is labeled with its language.
 
         from cookiecutter_aws_cdk_demo.api import one
 
-        one.config.cft_stack_name_param
+        one.config.cft_stack_name_alerts
 
     .. code-block:: bash
 
-        python -c 'from cookiecutter_aws_cdk_demo.api import one; print(one.config.cft_stack_name_param)'
+        python -c 'from cookiecutter_aws_cdk_demo.api import one; print(one.config.cft_stack_name_alerts)'
 
 
 Dropdowns

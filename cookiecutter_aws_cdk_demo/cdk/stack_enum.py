@@ -1,120 +1,82 @@
 # -*- coding: utf-8 -*-
 
 """
-The registry of every CDK stack in this project.
+Layer 2 of the cdk_mate two-layer pattern: one CDK stack per stack.
+
+Layer 1, :mod:`~cookiecutter_aws_cdk_demo.cdk.stack_ctx_enum`, says *which* stacks
+exist and where they go. This module says *how* each one is created: one
+``@cached_property`` per entry, with the same name, written out by hand:
+
+- **Arguments by name.** Each property passes its stack's arguments explicitly,
+  so a new ``__init__`` argument breaks every property that does not pass it,
+  instead of hiding behind ``**kwargs``.
+- **Dependencies are attribute access.** ``publisher`` passes
+  ``self.alerts.alert_topic``, so it creates ``alerts`` first, and CDK turns the
+  reference into an export of the alerts stack and an import in the publisher stack.
+- **One instance per stack.** A cached property is built once; creating the
+  same construct ID twice in one ``cdk.App`` is an error.
+
+The app holds the stacks of the current environment only, the one ``ENV_NAME``
+selects; ``cdk_app.py`` calls :meth:`StackEnum.synth`.
+
+Use it as ``one.stack_enum``; tests create ``StackEnum(app=cdk.App(), one=...)``.
 """
 
 from __future__ import annotations
 
+import typing as T
 import dataclasses
 from functools import cached_property
 
 import aws_cdk as cdk
 
-from ..config.api import Config
-from ..one.api import One
-from ..one.api import one
-from .stacks.param_stack import ParamStack
+from .stack_ctx_enum import list_entry_names
+from .stacks.alerts_stack import AlertsStack
+from .stacks.publisher_stack.stack import PublisherStack
+
+if T.TYPE_CHECKING:  # pragma: no cover
+    from ..one.api import One
 
 
 @dataclasses.dataclass
 class StackEnum:
     """
-    Every stack of the app, one ``@cached_property`` each, built on first access.
-
-    This class is the single source of truth for the stack list: ``cdk_app.py``
-    synthesizes :attr:`stacks`, and ``mise run cdk-gen-tasks`` turns their short
-    names into the ``cdk-*-<short_name>`` tasks. To add a stack:
-
-    1. Add ``stack_short_name_<x>`` to ``Config``, and ``cft_stack_name_<x>`` /
-       ``cft_stack_url_<x>`` to ``ConfigNameMixin``.
-    2. Write the stack class under ``stacks/``, taking ``(scope, id, config, **kwargs)``.
-    3. Add a ``@cached_property`` here that builds it with ``id=self.config.cft_stack_name_<x>``,
-       ``config=self.config``, and ``env=self.cdk_env``.
-    4. Run ``mise run cdk-gen-tasks``.
+    One CDK stack per stack of the current environment, created in :attr:`app`
+    on first access, named like its entry in
+    :class:`~cookiecutter_aws_cdk_demo.cdk.stack_ctx_enum.StackCtxEnum`.
     """
 
     # fmt: off
     app: cdk.App = dataclasses.field()  #: The CDK app that owns every stack.
-    one: One = dataclasses.field()  #: The project singleton; stacks get only its ``config``.
+    one: One = dataclasses.field()  #: The project singleton, for ``config`` and ``stack_ctx_enum``.
     # fmt: on
 
     @cached_property
-    def config(self) -> Config:
-        """
-        The config of the environment being deployed, ``one.config``.
-        """
-        return self.one.config
-
-    @cached_property
-    def cdk_env(self) -> cdk.Environment:
-        """
-        The account and region from the config. Every stack is bound to it, so the
-        cdk CLI also refuses to deploy with credentials of another account.
-        """
-        return cdk.Environment(
-            account=self.config.aws_account_id,
-            region=self.config.aws_region,
-        )
-
-    @cached_property
-    def param_stack(self) -> ParamStack:
-        """
-        The sample stack with one SSM parameter.
-        """
-        return ParamStack(
+    def alerts(self) -> AlertsStack:
+        return AlertsStack(
             scope=self.app,
-            id=self.config.cft_stack_name_param,
-            config=self.config,
-            env=self.cdk_env,
+            **self.one.stack_ctx_enum.alerts.to_stack_kwargs(),
+            config=self.one.config,
         )
 
-    @property
-    def stacks(self) -> list[cdk.Stack]:
-        """
-        Every stack, in the order the properties are defined in this class.
+    @cached_property
+    def publisher(self) -> PublisherStack:
+        return PublisherStack(
+            scope=self.app,
+            **self.one.stack_ctx_enum.publisher.to_stack_kwargs(),
+            config=self.one.config,
+            alert_topic=self.alerts.alert_topic,
+        )
 
-        Any ``@cached_property`` of this class that returns an ``aws_cdk.Stack``
-        counts, so a new stack needs no second registration here.
+    def get_all(self) -> list[cdk.Stack]:
         """
-        stacks = []
-        for name, attr in type(self).__dict__.items():
-            if isinstance(attr, cached_property):
-                value = getattr(self, name)
-                if isinstance(value, cdk.Stack):
-                    stacks.append(value)
-        return stacks
-
-    @property
-    def stack_short_names(self) -> list[str]:
+        Create every stack, in creation order, and return them.
         """
-        The short name of every stack: its name without ``config.prefix_name_slug``.
-
-        :raises ValueError: a stack name does not start with ``<prefix_name_slug>-``.
-        """
-        prefix = f"{self.config.prefix_name_slug}-"
-        short_names = []
-        for stack in self.stacks:
-            if not stack.stack_name.startswith(prefix):
-                raise ValueError(
-                    f"stack name {stack.stack_name!r} must start with {prefix!r}, "
-                    "build it with config.get_cft_stack_name()"
-                )
-            short_names.append(stack.stack_name[len(prefix) :])
-        return short_names
+        return [getattr(self, name) for name in list_entry_names(type(self))]
 
     def synth(self) -> None:
         """
-        Build every stack, then synthesize the app into ``cdk.out``.
+        Create every stack, then synthesize the app into ``cdk.out``.
         """
-        _ = self.stacks
+        self.get_all()
         self.app.synth()
-
-
-stack_enum = StackEnum(
-    app=cdk.App(),
-    one=one,
-)
-"""
-The stack registry of this project; ``cdk/cdk_app.py`` synthesizes it.
-"""

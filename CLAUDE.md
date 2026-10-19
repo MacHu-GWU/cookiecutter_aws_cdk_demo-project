@@ -29,6 +29,16 @@ This repo follows the pywf open-source Python library template. **Before creatin
 - `mise run publish`, `mise run release`, `mise run update-github-metadata`, and the `setup-*` tasks change external services: run each one only after the user's yes, one step per yes.
 - The changelog is `release-history.rst`. Never edit its `x.y.z (Backlog)` section.
 
+## CDK
+
+The CDK layout and the mise tasks are in `README.rst` (Stack Workflow); the cdk_mate pattern is in the `pypi-cdk_mate` skill, and every cdk CLI option is in the `aws-cdk-cli-ref` skill.
+
+- `one.config`, `one.bsm`, `one.stack_ctx_enum`, `one.stack_enum` all belong to the current environment, which `ENV_NAME` selects (default `dev`).
+- Humans run `mise run cdk-<synth|plan|up|down>-<env>-<<stack>-stack|all>` (such as `cdk-up-dev-alerts-stack`, `cdk-up-dev-all`). You may run the same thing with `ENV_NAME=<env> .venv/bin/python cdk/cdk_cmd.py <action> <stack>`, or call the cdk CLI directly from `cdk/` with the environment's name and profile: `ENV_NAME=dev mise exec -- cdk diff CookiecutterAwsCdkDemoDevAlerts --exclusively --profile "$AWS_PROFILE_DEV"`.
+- `synth`, `plan` (diff), and `ls` change nothing. `up` (deploy) and `down` (destroy) change AWS: run them only after the user's yes, one environment per yes.
+- After changing the entries of `StackCtxEnum`, run `mise run cdk-gen-tasks`. Keep `StackCtxEnum` and `StackEnum` entries identical, one per stack (a test checks it).
+- `*_stack_exports.py` must import only the standard library; its stack names are literal values (a test checks them against the config).
+
 ## Skills
 
 | Job | Skill |

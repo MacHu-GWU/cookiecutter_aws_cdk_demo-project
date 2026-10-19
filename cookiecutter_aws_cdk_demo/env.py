@@ -18,6 +18,7 @@ has no side effect.
 
 from __future__ import annotations
 
+import os
 import enum
 from functools import cached_property
 
@@ -35,6 +36,12 @@ class EnvNameEnum(enum.Enum):
     prd = "prd"
 
 
+ENV_NAME_VAR = "ENV_NAME"
+"""
+The environment variable that selects the current environment, such as ``ENV_NAME=prd``.
+"""
+
+
 class Env:
     """
     Detects the current deployment environment.
@@ -46,11 +53,18 @@ class Env:
         """
         Work out the current environment; :attr:`current_env_name` caches the result.
 
-        This template always returns :attr:`EnvNameEnum.dev`. Change it to the rule
-        your project needs, such as reading an ``ENV_NAME`` environment variable
-        or the git branch name.
+        It reads the ``ENV_NAME`` environment variable, and defaults to
+        :attr:`EnvNameEnum.dev` when it is not set. Locally, ``.env`` may set it;
+        each ``cdk-<action>-<env>-*`` mise task sets it for its own process, and the
+        cdk CLI passes it on to the cdk app.
+
+        :raises ValueError: ``ENV_NAME`` is not a member of :class:`EnvNameEnum`.
         """
-        return EnvNameEnum.dev
+        value = os.environ.get(ENV_NAME_VAR, "")
+        if value:
+            return EnvNameEnum(value)
+        else:
+            return EnvNameEnum.dev
 
     @cached_property
     def current_env_name(self) -> str:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from cookiecutter_aws_cdk_demo.one.one_02_boto_ses import get_aws_profile_env_var
 from cookiecutter_aws_cdk_demo.one.one_02_boto_ses import OneBotoSesMixin
 
 import pytest
@@ -10,16 +11,44 @@ from cookiecutter_aws_cdk_demo.config.api import Config
 from cookiecutter_aws_cdk_demo.one.api import One
 
 
-def test_boto_ses(monkeypatch):
+def test_get_aws_profile_env_var():
+    assert get_aws_profile_env_var("prd") == "AWS_PROFILE_PRD"
+
+
+@pytest.mark.parametrize(
+    "ci,profile,expected",
+    [
+        (False, "my_dev", "my_dev"),
+        (False, None, None),
+        (True, "my_dev", None),
+    ],
+)
+def test_bsm(monkeypatch, ci: bool, profile: str | None, expected: str | None):
     """
-    The session follows the standard chain; building it makes no AWS call.
+    Locally, ``AWS_PROFILE_<ENV>`` of the current environment picks the profile;
+    otherwise the default chain. The region comes from the config; no AWS call.
     """
-    monkeypatch.delenv("AWS_PROFILE", raising=False)
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+    if ci:
+        monkeypatch.setenv("CI", "true")
+    if profile is None:
+        monkeypatch.delenv("AWS_PROFILE_DEV", raising=False)
+    else:
+        monkeypatch.setenv("AWS_PROFILE_DEV", profile)
     one = One()
+    one.config = Config(
+        project_name="my_project",
+        env_name="dev",
+        aws_account_id="111122223333",
+        aws_region="us-west-2",
+        log_level="DEBUG",
+    )
     assert isinstance(one, OneBotoSesMixin)
-    assert isinstance(one.boto_ses, boto3.Session)
-    assert one.aws_region == "us-east-1"
+    assert (one.bsm.profile_name or None) == expected
+    assert one.bsm.region_name == "us-west-2"
+    # the profile "my_dev" does not exist here, so only build a session without one
+    if expected is None:
+        assert isinstance(one.boto_ses, boto3.Session)
+        assert one.aws_region == "us-west-2"
 
 
 @pytest.mark.parametrize(
