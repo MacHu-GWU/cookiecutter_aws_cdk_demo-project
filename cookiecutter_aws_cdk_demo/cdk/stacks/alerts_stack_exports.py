@@ -19,7 +19,7 @@ stays self-contained. ``tests_int/`` checks them, and every output key, against
 the deployed stack.
 
 To add a value: add a ``cdk.CfnOutput`` to the stack, then a property here that
-reads it by its output key.
+reads it by its output key, and add the property to :meth:`AlertsStackExports.to_dict`.
 """
 
 import typing as T
@@ -95,3 +95,12 @@ class AlertsStackExports:
         The ARN of the SNS topic to publish alerts to.
         """
         return self.outputs["AlertTopicArn"]
+
+    def to_dict(self) -> dict[str, str]:
+        """
+        Every value this module provides, by property name. Reading them all
+        raises ``KeyError`` if the deployed stack lacks one of the outputs.
+        """
+        return {
+            "alert_topic_arn": self.alert_topic_arn,
+        }

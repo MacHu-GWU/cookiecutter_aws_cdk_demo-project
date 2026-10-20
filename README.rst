@@ -55,7 +55,7 @@ A template for a code base that manages several AWS CDK stacks across several en
 - **alerts** (``cdk/stacks/alerts_stack.py``, a simple stack in one file): an SNS topic and an SSM parameter holding the environment's log level.
 - **publisher** (``cdk/stacks/publisher_stack/``, the folder form with one mixin per resource group): an IAM role allowed to publish to the alerts topic, and an SSM parameter with the topic ARN. It depends on the alerts stack of the same environment.
 
-Each stack has a ``<name>_stack_exports.py`` that imports nothing from this project, so another project copies that one file to read the stack's outputs. A unit test checks that its literal stack names and output keys match the real stack.
+Each stack has a ``<name>_stack_exports.py`` that imports nothing from this project, so another project copies that one file to read the stack's outputs. Its ``to_dict()`` lists every value it provides; ``mise run int-test`` checks them against the deployed stack.
 
 
 Stack Workflow
@@ -110,7 +110,7 @@ How the code is organized: everything environment specific is a lazy property of
       - one CDK stack per stack, created in one ``cdk.App``; what ``cdk/cdk_app.py`` synthesizes
       - ``cdk/stack_enum.py``
 
-Tests: ``mise run cov`` runs the unit tests in ``tests/``, with no AWS call; for a stack that is just a synth smoke test through ``StackEnum``. ``mise run int-test`` runs ``tests_int/`` against the stacks deployed in ``ENV_NAME``, such as the check that every ``*_stack_exports.py`` property reads a real output; those modules are left out of coverage.
+Tests: ``mise run cov`` runs the unit tests in ``tests/``, with no AWS call; for a stack that is just a synth smoke test through ``StackEnum``. ``mise run int-test`` runs ``tests_int/`` against the stacks deployed in ``ENV_NAME``, such as loading each ``*_stack_exports.py`` and calling ``to_dict()``, which fails if an output is missing; those modules are left out of coverage.
 
 So the cdk app only holds the stacks of one environment, each with its stack name as construct ID, such as ``cookiecutter-aws-cdk-demo-prd-alerts``. The cdk CLI passes ``ENV_NAME`` on to the app, so ``ENV_NAME=prd cdk synth`` synthesizes prd, and deploying dev does not need the prd config.
 
@@ -119,7 +119,7 @@ To add a stack:
 1. In ``cookiecutter_aws_cdk_demo/config/config_01_name.py``, add ``cft_stack_name_<x>`` / ``cft_stack_url_<x>`` and the names of the resources the stack holds. Names are built only there.
 2. Write the stack in ``cookiecutter_aws_cdk_demo/cdk/stacks/``: ``<x>_stack.py``, or ``<x>_stack/stack.py`` plus ``stack_0N_<topic>.py`` mixins once it grows. It takes ``(scope, id, stack_name, env, config)`` plus the resources of other stacks it uses.
 3. Add a ``<x>`` entry to ``StackCtxEnum`` and ``StackEnum``, after the stacks it depends on.
-4. If other projects need its outputs, add ``<x>_stack_exports.py`` (stdlib only, literal stack names) and a ``tests_int/`` test with ``check_stack_exports``.
+4. If other projects need its outputs, add ``<x>_stack_exports.py`` (stdlib only, literal stack names, every value listed in ``to_dict``) and a ``tests_int/`` test that loads it and calls ``to_dict``.
 5. Run ``mise run cdk-gen-tasks``. It rewrites the block between ``# <cdk-stack-tasks>`` and ``# </cdk-stack-tasks>`` in ``mise.toml``; never edit that block by hand. A unit test fails while the block is out of date.
 
 

@@ -1,15 +1,23 @@
 # -*- coding: utf-8 -*-
 
-from cookiecutter_aws_cdk_demo.cdk.stacks import publisher_stack_exports
+from cookiecutter_aws_cdk_demo.cdk.stacks.publisher_stack_exports import STACK_NAMES
+from cookiecutter_aws_cdk_demo.cdk.stacks.publisher_stack_exports import (
+    PublisherStackExports,
+)
 
-from cookiecutter_aws_cdk_demo.tests.helper import check_stack_exports
+from cookiecutter_aws_cdk_demo.one.api import one
 
 
 def test():
-    check_stack_exports(
-        module=publisher_stack_exports,
-        exports_class=publisher_stack_exports.PublisherStackExports,
+    """
+    The deployed stack of the current environment has every output this module reads.
+    """
+    env_name = one.env.current_env_name
+    assert STACK_NAMES[env_name] == one.config.cft_stack_name_publisher
+    exports = PublisherStackExports.load(
+        cf_client=one.cloudformation_client, env_name=env_name
     )
+    print(exports.to_dict())
 
 
 if __name__ == "__main__":
