@@ -1,43 +1,27 @@
 # -*- coding: utf-8 -*-
 
+"""
+Synth smoke test of the publisher stack: create it through ``StackEnum``, the way
+``cdk/cdk_app.py`` does, and synthesize it. Passing means the constructs, names,
+and cross-stack references are wired up; what each resource looks like is not
+checked here (the names are checked in ``tests/config/test_config_config_01_name.py``).
+"""
+
 from cookiecutter_aws_cdk_demo.cdk.stacks.publisher_stack.stack import PublisherStack
 
 import aws_cdk as cdk
-from aws_cdk import aws_sns as sns
-from aws_cdk.assertions import Template
 
 from cookiecutter_aws_cdk_demo.config.api import Config
+from cookiecutter_aws_cdk_demo.one.api import One
+from cookiecutter_aws_cdk_demo.cdk.stack_enum import StackEnum
 
 
-def test_publisher_stack(config: Config):
-    """
-    The role may publish to the given topic, and the parameter records its ARN.
-    """
-    app = cdk.App()
-    topic_stack = cdk.Stack(app, "TopicStack")
-    topic = sns.Topic(topic_stack, "Topic")
-    stack = PublisherStack(
-        scope=app,
-        id="Publisher",
-        stack_name=config.cft_stack_name_publisher,
-        env=None,
-        config=config,
-        alert_topic=topic,
-    )
-    template = Template.from_stack(stack)
-    template.has_resource_properties(
-        "AWS::IAM::Role",
-        {"RoleName": "my-project-dev-publisher"},
-    )
-    template.resource_count_is("AWS::IAM::Policy", 1)
-    template.has_resource_properties(
-        "AWS::SSM::Parameter",
-        {"Name": "/my-project-dev/alert-topic-arn"},
-    )
-    template.has_output(
-        "PublisherRoleArn",
-        {"Export": {"Name": "my-project-dev-publisher-role-arn"}},
-    )
+def test_synth(config: Config):
+    one = One()
+    one.config = config
+    stack_enum = StackEnum(app=cdk.App(), one=one)
+    assert isinstance(stack_enum.publisher, PublisherStack)
+    stack_enum.app.synth()
 
 
 if __name__ == "__main__":
