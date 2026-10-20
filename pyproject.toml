@@ -87,7 +87,6 @@ Documentation = "https://cookiecutter-aws-cdk-demo.readthedocs.io/en/latest/"
 Repository = "https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project"
 Issues = "https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/issues"
 Changelog = "https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/main/release-history.rst"
-Download = "https://pypi.org/pypi/cookiecutter-aws-cdk-demo#files"
 
 # Read: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#creating-executable-scripts
 [project.scripts]

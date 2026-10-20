@@ -5,7 +5,7 @@ Generate the ``<cdk-stack-tasks>`` block of ``mise.toml`` (``mise run cdk-gen-ta
 four tasks per (environment, stack), ``cdk-<action>-<env>-<stack>-stack``, plus
 four ``cdk-<action>-<env>-all`` per environment. Each task prints the console URL
 of the stacks it acts on, then runs one plain cdk command in ``cdk/`` with
-``ENV_NAME`` and ``--profile {{env.AWS_PROFILE_FOR_<ENV>}}``. See README, Stack Workflow.
+``ENV_NAME`` and ``--profile {{env.AWS_PROFILE_FOR_<ENV>}}``. See the ``pywf-aws-cdk-base`` skill, ``12-cdk-mise-tasks.md``.
 
 The stacks are the entries of :class:`~cookiecutter_aws_cdk_demo.cdk.stack_ctx_enum.StackCtxEnum`,
 the environments the members of :class:`~cookiecutter_aws_cdk_demo.env.EnvNameEnum`;

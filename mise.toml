@@ -4,7 +4,6 @@
 GITHUB_TOKEN = "{{ exec(command='uvx --from home-secret-toml hst get github.accounts.sh.users.sh.secrets.dev.value || true') }}"
 CODECOV_TOKEN = "{{ exec(command='uvx --from home-secret-toml hst get codecov_io.accounts.sh.users.sh.secrets.dev.value || true') }}"
 READTHEDOCS_TOKEN = "{{ exec(command='uvx --from home-secret-toml hst get readthedocs.accounts.sh.users.sh.secrets.dev.value || true') }}"
-PYPI_TOKEN = "{{ exec(command='uvx --from home-secret-toml hst get pypi.accounts.sh.token || true') }}"
 # Make uv use the mise Python below (first ``python`` on PATH), not a uv-managed one
 # or a global ``~/.config/uv/.python-version`` pin. ``[tools] python`` is the one dev version.
 UV_PYTHON = "python"
@@ -99,21 +98,13 @@ description = "📓 Convert Jupyter notebooks to Markdown for AI knowledge base 
 run = ".venv/bin/python .mise/tasks/notebook-to-markdown.py"
 depends = ["inst"]
 
-# Building & Publishing & Release
+# Building & Release
 [tasks.build]
 description = "🏗️ Build Python package wheel and source distribution using uv (outputs to dist/)"
 run = """
 rm -rf dist
 uv build
 """
-
-[tasks.publish]
-description = "🚀 Publish Python package to PyPI using uv (prints PyPI URL after success)"
-run = """
-.venv/bin/python .mise/tasks/publish.py
-uv publish --token $PYPI_TOKEN
-"""
-depends = ["build"]
 
 [tasks.release]
 description = "🏷 Create GitHub release using PyGithub (idempotent: skips if release exists)"
