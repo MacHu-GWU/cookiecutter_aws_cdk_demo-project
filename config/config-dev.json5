@@ -1,7 +1,7 @@
 // Settings of the dev environment; overrides config-shared.json5.
 {
   // The region this environment deploys to; aws_account_id is in the -secret file.
-  // Every cdk command stops if the AWS profile of the environment (AWS_PROFILE_<ENV> in .env) points anywhere else.
+  // Every cdk command stops if the AWS profile of the environment (AWS_PROFILE_FOR_<ENV> in .env) points anywhere else.
   aws_region: "us-east-1",
   // Log level of this environment, stored in an SSM parameter by the alerts stack.
   log_level: "DEBUG",

@@ -23,9 +23,9 @@ if T.TYPE_CHECKING:  # pragma: no cover
 def get_aws_profile_env_var(env_name: str) -> str:
     """
     The environment variable that names the local AWS profile of an environment,
-    such as ``AWS_PROFILE_DEV`` for ``dev``; mise loads it from ``.env``.
+    such as ``AWS_PROFILE_FOR_DEV`` for ``dev``; mise loads it from ``.env``.
     """
-    return f"AWS_PROFILE_{env_name.upper()}"
+    return f"AWS_PROFILE_FOR_{env_name.upper()}"
 
 
 class OneBotoSesMixin:
@@ -41,7 +41,7 @@ class OneBotoSesMixin:
 
         On a developer's machine (``runtime`` local), each environment usually has
         its own account and named profile: the session uses the profile named by
-        ``AWS_PROFILE_<ENV>`` of the current environment, such as ``AWS_PROFILE_PRD``.
+        ``AWS_PROFILE_FOR_<ENV>`` of the current environment, such as ``AWS_PROFILE_FOR_PRD``.
         Without it, and on any other runtime such as CI, it follows the standard
         credential chain (``AWS_PROFILE``, access keys, an assumed role).
 
@@ -98,7 +98,7 @@ class OneBotoSesMixin:
         """
         Check that :attr:`boto_ses` points at the account and region in ``config``.
 
-        Run it before any deploy, so a wrong ``AWS_PROFILE_<ENV>`` stops the command
+        Run it before any deploy, so a wrong ``AWS_PROFILE_FOR_<ENV>`` stops the command
         instead of changing another account.
 
         :raises ValueError: the account ID or the region differs from the config.

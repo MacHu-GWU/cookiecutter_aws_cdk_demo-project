@@ -12,7 +12,7 @@ from cookiecutter_aws_cdk_demo.one.api import One
 
 
 def test_get_aws_profile_env_var():
-    assert get_aws_profile_env_var("prd") == "AWS_PROFILE_PRD"
+    assert get_aws_profile_env_var("prd") == "AWS_PROFILE_FOR_PRD"
 
 
 @pytest.mark.parametrize(
@@ -25,15 +25,15 @@ def test_get_aws_profile_env_var():
 )
 def test_bsm(monkeypatch, ci: bool, profile: str | None, expected: str | None):
     """
-    Locally, ``AWS_PROFILE_<ENV>`` of the current environment picks the profile;
+    Locally, ``AWS_PROFILE_FOR_<ENV>`` of the current environment picks the profile;
     otherwise the default chain. The region comes from the config; no AWS call.
     """
     if ci:
         monkeypatch.setenv("CI", "true")
     if profile is None:
-        monkeypatch.delenv("AWS_PROFILE_DEV", raising=False)
+        monkeypatch.delenv("AWS_PROFILE_FOR_DEV", raising=False)
     else:
-        monkeypatch.setenv("AWS_PROFILE_DEV", profile)
+        monkeypatch.setenv("AWS_PROFILE_FOR_DEV", profile)
     one = One()
     one.config = Config(
         project_name="my_project",

@@ -24,7 +24,7 @@ class PublisherStack(
     The publisher stack.
 
     :param scope: the CDK app.
-    :param id: the construct ID, such as ``CookiecutterAwsCdkDemoDevPublisher``.
+    :param id: the construct ID, such as ``config.cft_stack_name_publisher``, the same as ``stack_name``.
     :param stack_name: the CloudFormation stack name, ``config.cft_stack_name_publisher``.
     :param env: the account and region of ``config``.
     :param config: the config of the environment being deployed.

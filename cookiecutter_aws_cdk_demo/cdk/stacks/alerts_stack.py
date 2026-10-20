@@ -31,7 +31,7 @@ class AlertsStack(cdk.Stack):
     config always synthesizes the same template.
 
     :param scope: the CDK app.
-    :param id: the construct ID, such as ``CookiecutterAwsCdkDemoDevAlerts``.
+    :param id: the construct ID, such as ``config.cft_stack_name_alerts``, the same as ``stack_name``.
     :param stack_name: the CloudFormation stack name, ``config.cft_stack_name_alerts``.
     :param env: the account and region of ``config``.
     :param config: the config of the environment being deployed.

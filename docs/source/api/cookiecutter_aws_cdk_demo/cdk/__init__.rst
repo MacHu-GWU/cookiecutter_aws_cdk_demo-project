@@ -12,7 +12,6 @@ sub packages and modules
 
     stacks <stacks/__init__>
     api <api>
-    cdk_cmd <cdk_cmd>
     mise_tasks <mise_tasks>
     stack_ctx_enum <stack_ctx_enum>
     stack_enum <stack_enum>

@@ -50,8 +50,8 @@ class TestStackEnum:
         se.synth()
         names = sorted(p.name for p in tmp_path.glob("*.template.json"))
         assert names == [
-            "MyProjectDevAlerts.template.json",
-            "MyProjectDevPublisher.template.json",
+            "my-project-dev-alerts.template.json",
+            "my-project-dev-publisher.template.json",
         ]
 
 

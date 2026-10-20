@@ -9,9 +9,10 @@ Every entry belongs to the current environment: its names, account, and region
 come from ``one.config``, and its session is ``one.bsm``. Building one creates no
 CDK construct and makes no AWS call.
 
-- **Who uses it:** :mod:`~cookiecutter_aws_cdk_demo.cdk.cdk_cmd`, which the
-  ``cdk-*`` mise tasks run. Deploying needs the stack names and the credentials,
-  not the stack objects; the cdk CLI builds the stacks itself by running the app.
+- **Who uses it:** :class:`~cookiecutter_aws_cdk_demo.cdk.stack_enum.StackEnum`
+  (``to_stack_kwargs``), ``mise run cdk-gen-tasks`` (the construct ID of each
+  stack in each environment), and any script that runs a cdk command from
+  Python (``one.stack_ctx_enum.alerts.cdk_diff(...)``) with the session ``one.bsm``.
 - **Layer 2,** :mod:`~cookiecutter_aws_cdk_demo.cdk.stack_enum`, creates the CDK
   stack of each entry, with an attribute of the same name.
 - **Naming:** the attribute name is the stack name, such as ``alerts``; with ``_``
@@ -30,8 +31,6 @@ import dataclasses
 from functools import cached_property
 
 from cdk_mate.api import StackCtx
-from cdk_mate.api import to_camel
-from cdk_mate.api import to_slug
 
 if T.TYPE_CHECKING:  # pragma: no cover
     from ..one.api import One
@@ -62,13 +61,15 @@ class StackCtxEnum:
 
     def _new(self, stack_name: str) -> StackCtx:
         """
-        The context of ``stack_name``. The construct ID is the stack name in
-        CamelCase, as in :meth:`cdk_mate.stack_ctx.StackCtx.new`, but the account
-        and region come from the config instead of an STS call.
+        The context of ``stack_name``. The construct ID is the stack name itself,
+        such as ``my-project-dev-alerts``, so the cdk CLI, the CloudFormation
+        console, and the config all use one name, which already says the
+        environment. The account and region come from the config instead of an
+        STS call, unlike :meth:`cdk_mate.stack_ctx.StackCtx.new`.
         """
         return StackCtx(
-            construct_id=to_camel(stack_name),
-            stack_name=to_slug(stack_name),
+            construct_id=stack_name,
+            stack_name=stack_name,
             aws_account_id=self.one.config.aws_account_id,
             aws_region=self.one.config.aws_region,
             bsm=self.one.bsm,

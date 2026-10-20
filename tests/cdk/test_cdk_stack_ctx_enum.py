@@ -21,7 +21,7 @@ class TestStackCtxEnum:
         one.config = config
         stack_ctx_enum = StackCtxEnum(one=one)
         stack_ctx = stack_ctx_enum.alerts
-        assert stack_ctx.construct_id == "MyProjectDevAlerts"
+        assert stack_ctx.construct_id == "my-project-dev-alerts"
         assert stack_ctx.stack_name == "my-project-dev-alerts"
         assert stack_ctx.aws_account_id == "111122223333"
         assert stack_ctx.aws_region == "us-east-1"
