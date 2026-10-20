@@ -35,7 +35,7 @@ class OneBotoSesMixin:
     """
 
     @cached_property
-    def bsm(self: One) -> BotoSesManager:
+    def bsm(self: One) -> BotoSesManager:  # pragma: no cover
         """
         The boto session of the current environment, in the region of its config;
         creating it makes no AWS call.
@@ -55,7 +55,7 @@ class OneBotoSesMixin:
         return BotoSesManager(region_name=region_name)
 
     @cached_property
-    def boto_ses(self: One) -> boto3.Session:
+    def boto_ses(self: One) -> boto3.Session:  # pragma: no cover
         """
         The boto3 session of :attr:`bsm`.
         """
