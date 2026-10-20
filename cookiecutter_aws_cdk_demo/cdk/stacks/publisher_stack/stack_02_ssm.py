@@ -19,7 +19,7 @@ class PublisherStackSsmMixin:
     The parameter that records where to send alerts.
     """
 
-    def create_ssm(self: PublisherStack) -> None:
+    def s02_create_ssm_parameter(self: PublisherStack) -> None:
         """
         Create the parameter valued with the alert topic ARN.
         """

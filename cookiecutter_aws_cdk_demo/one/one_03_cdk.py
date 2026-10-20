@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-The CDK part of ``one``: the two layers of the cdk_mate pattern,
-:attr:`~cookiecutter_aws_cdk_demo.one.one_03_cdk.OneCdkMixin.stack_ctx_enum` and
-:attr:`~cookiecutter_aws_cdk_demo.one.one_03_cdk.OneCdkMixin.stack_enum`.
-
-The CDK modules are imported inside the properties, so importing ``one`` does not
-load ``aws_cdk`` (which starts a node process); only the code that uses them pays.
+The CDK part of ``one``: the two layers of the cdk_mate pattern, for the current
+environment. The CDK modules are imported inside the properties, so importing
+``one`` does not load ``aws_cdk``.
 """
 
 from __future__ import annotations
@@ -28,8 +25,7 @@ class OneCdkMixin:
     @cached_property
     def stack_ctx_enum(self: One) -> StackCtxEnum:
         """
-        One ``cdk_mate.StackCtx`` per (stack, environment), such as
-        ``one.stack_ctx_enum.alerts_dev``. See :mod:`cookiecutter_aws_cdk_demo.cdk.stack_ctx_enum`.
+        One ``cdk_mate.StackCtx`` per stack, such as ``one.stack_ctx_enum.alerts``.
         """
         from ..cdk.stack_ctx_enum import StackCtxEnum
 
@@ -38,9 +34,7 @@ class OneCdkMixin:
     @cached_property
     def stack_enum(self: One) -> StackEnum:
         """
-        One CDK stack per (stack, environment), in a new ``cdk.App``, such as
-        ``one.stack_enum.alerts_dev``; ``cdk/cdk_app.py`` synthesizes it.
-        See :mod:`cookiecutter_aws_cdk_demo.cdk.stack_enum`.
+        One CDK stack per stack, in a new ``cdk.App``, such as ``one.stack_enum.alerts``.
         """
         import aws_cdk as cdk
 

@@ -23,7 +23,9 @@ def test_get_aws_profile_env_var():
         (True, "my_dev", None),
     ],
 )
-def test_bsm(monkeypatch, ci: bool, profile: str | None, expected: str | None):
+def test_bsm(
+    monkeypatch, config: Config, ci: bool, profile: str | None, expected: str | None
+):
     """
     Locally, ``AWS_PROFILE_FOR_<ENV>`` of the current environment picks the profile;
     otherwise the default chain. The region comes from the config; no AWS call.
@@ -35,46 +37,14 @@ def test_bsm(monkeypatch, ci: bool, profile: str | None, expected: str | None):
     else:
         monkeypatch.setenv("AWS_PROFILE_FOR_DEV", profile)
     one = One()
-    one.config = Config(
-        project_name="my_project",
-        env_name="dev",
-        aws_account_id="111122223333",
-        aws_region="us-west-2",
-        log_level="DEBUG",
-    )
+    one.config = config.model_copy(update={"aws_region": "us-west-2"})
     assert isinstance(one, OneBotoSesMixin)
     assert (one.bsm.profile_name or None) == expected
     assert one.bsm.region_name == "us-west-2"
     # the profile "my_dev" does not exist here, so only build a session without one
     if expected is None:
         assert isinstance(one.boto_ses, boto3.Session)
-        assert one.aws_region == "us-west-2"
-
-
-@pytest.mark.parametrize(
-    "aws_account_id,aws_region,ok",
-    [
-        ("111122223333", "us-east-1", True),
-        ("999999999999", "us-east-1", False),
-        ("111122223333", "us-west-2", False),
-    ],
-)
-def test_verify_boto_ses(
-    config: Config,
-    aws_account_id: str,
-    aws_region: str,
-    ok: bool,
-):
-    one = One()
-    one.config = config
-    # fake what the session reports, instead of calling STS
-    one.aws_account_id = aws_account_id
-    one.aws_region = aws_region
-    if ok:
-        one.verify_boto_ses()
-    else:
-        with pytest.raises(ValueError):
-            one.verify_boto_ses()
+        assert one.boto_ses.region_name == "us-west-2"
 
 
 if __name__ == "__main__":

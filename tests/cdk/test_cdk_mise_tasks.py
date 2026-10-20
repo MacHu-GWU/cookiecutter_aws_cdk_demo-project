@@ -9,6 +9,7 @@ from cookiecutter_aws_cdk_demo.cdk.mise_tasks import get_stack_targets
 from cookiecutter_aws_cdk_demo.cdk.mise_tasks import get_task_name
 from cookiecutter_aws_cdk_demo.cdk.mise_tasks import render_cdk_tasks
 from cookiecutter_aws_cdk_demo.cdk.mise_tasks import render_project_cdk_tasks
+from cookiecutter_aws_cdk_demo.cdk.mise_tasks import print_cdk_stack_urls
 from cookiecutter_aws_cdk_demo.cdk.mise_tasks import replace_cdk_tasks_block
 from cookiecutter_aws_cdk_demo.cdk.mise_tasks import update_mise_toml
 
@@ -17,6 +18,7 @@ import pytest
 import tomllib
 
 from cookiecutter_aws_cdk_demo.paths import path_enum
+from cookiecutter_aws_cdk_demo.cdk import mise_tasks
 
 
 @pytest.mark.parametrize(
@@ -97,6 +99,29 @@ def test_render_cdk_tasks():
     task = tasks["cdk-down-prd-a-stack"]
     assert task["run"].splitlines()[-1] == "cdk destroy p-prd-a --exclusively --force --profile {{env.AWS_PROFILE_FOR_PRD}}"
     # fmt: on
+
+
+def test_print_cdk_stack_urls(monkeypatch, capsys):
+    """
+    A failing environment prints an error line instead of raising, and the
+    other environments are still printed.
+    """
+    get_stack_targets_ = mise_tasks.get_stack_targets
+
+    def get_stack_targets(env_name: str):
+        if env_name == "tst":
+            raise FileNotFoundError("config-tst.json5")
+        return get_stack_targets_(env_name)
+
+    monkeypatch.setattr(mise_tasks, "get_stack_targets", get_stack_targets)
+    print_cdk_stack_urls()
+    out = capsys.readouterr().out
+    assert (
+        "--- tst ---\nERROR: cannot work out the stacks of 'tst': FileNotFoundError"
+        in out
+    )
+    assert "cookiecutter-aws-cdk-demo-dev-alerts: https://" in out
+    assert "cookiecutter-aws-cdk-demo-prd-publisher: https://" in out
 
 
 @pytest.mark.parametrize(

@@ -3,10 +3,10 @@
 """
 Read the outputs of the publisher stack, from this project or from any other.
 
-**Copy this file as is.** It imports nothing from this project, only the
-standard library, so another project that needs a value of this stack (such as
-:attr:`PublisherStackExports.publisher_role_arn`) copies this one file instead of depending on this
-project or guessing output names::
+**Copy this file as is.** It imports only the standard library (and a type stub
+when type checking), so another project that needs a value of this stack, such as
+:attr:`PublisherStackExports.publisher_role_arn`, copies this one file instead of
+depending on this project or guessing output names::
 
     import boto3
 
@@ -15,8 +15,8 @@ project or guessing output names::
     print(exports.publisher_role_arn)
 
 The stack names below are literal values, not built from the config, so the file
-stays self-contained. A unit test of this project checks that they, and the
-output keys, match what the stack really creates.
+stays self-contained. ``tests_int/`` checks them, and every output key, against
+the deployed stack.
 
 To add a value: add a ``cdk.CfnOutput`` to the stack, then a property here that
 reads it by its output key.

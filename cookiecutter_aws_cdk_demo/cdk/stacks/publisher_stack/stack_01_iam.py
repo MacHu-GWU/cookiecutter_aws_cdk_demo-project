@@ -20,7 +20,7 @@ class PublisherStackIamMixin:
     The role allowed to publish alerts.
     """
 
-    def create_iam(self: PublisherStack) -> None:
+    def s01_create_iam_role(self: PublisherStack) -> None:
         """
         Create the role, allow it to publish to the alert topic, and export its ARN.
         """

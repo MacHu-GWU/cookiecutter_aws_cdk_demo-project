@@ -26,9 +26,9 @@ class TestStackCtxEnum:
         assert stack_ctx.aws_account_id == "111122223333"
         assert stack_ctx.aws_region == "us-east-1"
         assert stack_ctx.bsm is one.bsm
+        assert stack_ctx_enum.publisher.stack_name == "my-project-dev-publisher"
         assert stack_ctx_enum.get("alerts") is stack_ctx
         assert stack_ctx_enum.get_all() == [stack_ctx, stack_ctx_enum.publisher]
-        assert stack_ctx_enum.publisher.stack_name == "my-project-dev-publisher"
 
 
 if __name__ == "__main__":

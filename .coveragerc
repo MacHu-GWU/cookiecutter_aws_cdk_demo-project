@@ -9,6 +9,8 @@ omit =
     cookiecutter_aws_cdk_demo/paths.py
     cookiecutter_aws_cdk_demo/env.py
     cookiecutter_aws_cdk_demo/runtime.py
+    # only testable against a deployed stack, see tests_int/
+    cookiecutter_aws_cdk_demo/cdk/stacks/*_stack_exports.py
 
 [report]
 # Regexes for lines to exclude from consideration

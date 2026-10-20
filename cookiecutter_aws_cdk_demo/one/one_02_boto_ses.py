@@ -2,7 +2,8 @@
 
 """
 The AWS session part of ``one``: :attr:`~cookiecutter_aws_cdk_demo.one.one_02_boto_ses.OneBotoSesMixin.bsm`,
-the boto session of the current environment, and the facts and clients derived from it.
+the boto session of the current environment, and the clients built from it.
+The account and region are ``one.config.aws_account_id`` / ``one.config.aws_region``.
 """
 
 from __future__ import annotations
@@ -30,24 +31,18 @@ def get_aws_profile_env_var(env_name: str) -> str:
 
 class OneBotoSesMixin:
     """
-    Lazily built boto3 session and AWS clients.
+    Lazily built boto session and AWS clients.
     """
 
     @cached_property
     def bsm(self: One) -> BotoSesManager:
         """
-        The boto session of the current environment, in the region of its config.
-        Creating it makes no AWS call.
+        The boto session of the current environment, in the region of its config;
+        creating it makes no AWS call.
 
-        On a developer's machine (``runtime`` local), each environment usually has
-        its own account and named profile: the session uses the profile named by
-        ``AWS_PROFILE_FOR_<ENV>`` of the current environment, such as ``AWS_PROFILE_FOR_PRD``.
-        Without it, and on any other runtime such as CI, it follows the standard
-        credential chain (``AWS_PROFILE``, access keys, an assumed role).
-
-        A wrong profile cannot change another account: every stack is bound to the
-        ``aws_account_id`` of the config, and the cdk CLI refuses to deploy it with
-        credentials of another account.
+        On the local runtime it uses the profile ``AWS_PROFILE_FOR_<ENV>`` of the
+        current environment when that is set. Otherwise it follows the standard
+        credential chain, as a CI runner would.
         """
         region_name = self.config.aws_region
         if self.runtime.current_runtime_name() == RuntimeNameEnum.local.value:
@@ -62,23 +57,9 @@ class OneBotoSesMixin:
     @cached_property
     def boto_ses(self: One) -> boto3.Session:
         """
-        The boto3 session every AWS call of this project goes through, from :attr:`bsm`.
+        The boto3 session of :attr:`bsm`.
         """
         return self.bsm.boto_ses
-
-    @cached_property
-    def aws_region(self: One) -> str | None:
-        """
-        The region of :attr:`boto_ses`, the ``aws_region`` of the current config.
-        """
-        return self.boto_ses.region_name
-
-    @cached_property
-    def aws_account_id(self: One) -> str:  # pragma: no cover
-        """
-        The AWS account ID of :attr:`boto_ses`; calls STS once.
-        """
-        return self.bsm.aws_account_id
 
     @cached_property
     def cloudformation_client(self: One):  # pragma: no cover
@@ -93,21 +74,3 @@ class OneBotoSesMixin:
         An SSM client from :attr:`boto_ses`.
         """
         return self.boto_ses.client("ssm")
-
-    def verify_boto_ses(self: One) -> None:
-        """
-        Check that :attr:`boto_ses` points at the account and region in ``config``.
-
-        Run it before any deploy, so a wrong ``AWS_PROFILE_FOR_<ENV>`` stops the command
-        instead of changing another account.
-
-        :raises ValueError: the account ID or the region differs from the config.
-        """
-        expected = (self.config.aws_account_id, self.config.aws_region)
-        actual = (self.aws_account_id, self.aws_region)
-        if actual != expected:
-            raise ValueError(
-                f"the boto session points at account / region {actual}, "
-                f"but config {self.config.env_name!r} expects {expected}; "
-                f"check {get_aws_profile_env_var(self.config.env_name)} in .env"
-            )

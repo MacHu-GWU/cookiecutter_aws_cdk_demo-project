@@ -21,18 +21,9 @@ class PublisherStack(
     PublisherStackSsmMixin,
 ):
     """
-    The publisher stack.
-
-    :param scope: the CDK app.
-    :param id: the construct ID, such as ``config.cft_stack_name_publisher``, the same as ``stack_name``.
-    :param stack_name: the CloudFormation stack name, ``config.cft_stack_name_publisher``.
-    :param env: the account and region of ``config``.
-    :param config: the config of the environment being deployed.
-    :param alert_topic: the alert topic of the
-        :class:`~cookiecutter_aws_cdk_demo.cdk.stacks.alerts_stack.AlertsStack` of
-        the same environment. It is an explicit argument, so the dependency is
-        visible in the signature and wired in
-        :class:`~cookiecutter_aws_cdk_demo.cdk.stack_enum.StackEnum`.
+    Like :class:`~cookiecutter_aws_cdk_demo.cdk.stacks.alerts_stack.AlertsStack`,
+    plus ``alert_topic``, the topic of the alerts stack of the same environment,
+    passed explicitly so the dependency shows in the signature.
     """
 
     def __init__(
@@ -52,5 +43,5 @@ class PublisherStack(
         )
         self.config = config
         self.alert_topic = alert_topic
-        self.create_iam()
-        self.create_ssm()
+        self.s01_create_iam_role()
+        self.s02_create_ssm_parameter()

@@ -76,7 +76,7 @@ Every (environment, stack) pair gets four mise tasks, ``cdk-<action>-<env>-<stac
     * - ``cdk-down-<env>-<stack>-stack``
       - Destroy, without confirmation
 
-Each task is one plain cdk command, run in ``cdk/`` with ``ENV_NAME=<env>`` set, such as ``cdk deploy cookiecutter-aws-cdk-demo-prd-alerts --exclusively --require-approval never --profile {{env.AWS_PROFILE_FOR_PRD}}``. A single stack is selected by its construct ID, which is its stack name, with ``--exclusively``; ``all`` uses ``--all`` and lets the cdk CLI order the stacks by their dependencies. ``synth`` makes no AWS call and takes no profile; the other actions stop with an error if the profile variable is not set. Before the cdk command, a task prints the CloudFormation console URL of each stack it acts on (one for a ``-stack`` task, all of them for an ``all`` task) and the command line.
+Each task is one plain cdk command, run in ``cdk/`` with ``ENV_NAME=<env>`` set, such as ``cdk deploy cookiecutter-aws-cdk-demo-prd-alerts --exclusively --require-approval never --profile {{env.AWS_PROFILE_FOR_PRD}}``. A single stack is selected by its construct ID (its stack name) with ``--exclusively``; ``all`` lets the cdk CLI order the stacks by their dependencies. ``synth`` makes no AWS call and takes no profile; the other actions stop with an error if the profile variable is not set. Before the cdk command, a task prints the CloudFormation console URL of each stack it acts on (one for a ``-stack`` task, all of them for an ``all`` task) and the command line.
 
 Setup: copy ``.env.example`` to ``.env`` and set ``AWS_PROFILE_FOR_DEV``, ``AWS_PROFILE_FOR_TST`` and ``AWS_PROFILE_FOR_PRD``; mise loads it for every task. An environment without one falls back to the default credential chain. ``ENV_NAME`` in ``.env`` sets the current environment for everything else (default ``dev``). Every stack is bound to the ``aws_account_id`` and ``aws_region`` of its config, so the cdk CLI refuses to deploy it with the credentials of another account. Then, for example:
 
@@ -84,6 +84,8 @@ Setup: copy ``.env.example`` to ``.env`` and set ``AWS_PROFILE_FOR_DEV``, ``AWS_
 
     mise run cdk-plan-dev-alerts-stack
     mise run cdk-up-dev-all
+
+``mise run print-cdk-stack-urls`` prints the console URL of every stack in every environment, without calling AWS. An environment whose config cannot load, such as one without its ``-secret`` file, prints an error line instead, and the others are still printed.
 
 Config lives in ``config/*.json5`` (json5 allows comments). ``Config.load_from_local_config_file`` merges, in order, ``config-shared.json5``, ``config-shared-secret.json5``, ``config-<env>.json5`` and ``config-<env>-secret.json5``, a later file overriding the keys of an earlier one. The ``-secret`` files are git-ignored and optional; ``config/example/`` shows the shape of each file. Deploys run only from a local machine: ``Config.load`` refuses any other runtime.
 
@@ -99,7 +101,7 @@ How the code is organized: everything environment specific is a lazy property of
       - the ``Config`` of the current environment
       - ``config/config_00_main.py``
     * - ``bsm``
-      - its boto session: locally the profile ``AWS_PROFILE_FOR_<ENV>``, otherwise (CI) the default credential chain
+      - its boto session: locally the profile ``AWS_PROFILE_FOR_<ENV>`` when set, otherwise the default credential chain
       - ``one/one_02_boto_ses.py``
     * - ``stack_ctx_enum``
       - one ``cdk_mate.StackCtx`` per stack, with names, account, region and session; what ``mise run cdk-gen-tasks`` and Python scripts use
@@ -108,6 +110,8 @@ How the code is organized: everything environment specific is a lazy property of
       - one CDK stack per stack, created in one ``cdk.App``; what ``cdk/cdk_app.py`` synthesizes
       - ``cdk/stack_enum.py``
 
+Tests: ``mise run cov`` runs the unit tests in ``tests/``, with no AWS call; for a stack that is just a synth smoke test through ``StackEnum``. ``mise run int-test`` runs ``tests_int/`` against the stacks deployed in ``ENV_NAME``, such as the check that every ``*_stack_exports.py`` property reads a real output; those modules are left out of coverage.
+
 So the cdk app only holds the stacks of one environment, each with its stack name as construct ID, such as ``cookiecutter-aws-cdk-demo-prd-alerts``. The cdk CLI passes ``ENV_NAME`` on to the app, so ``ENV_NAME=prd cdk synth`` synthesizes prd, and deploying dev does not need the prd config.
 
 To add a stack:
@@ -115,7 +119,7 @@ To add a stack:
 1. In ``cookiecutter_aws_cdk_demo/config/config_01_name.py``, add ``cft_stack_name_<x>`` / ``cft_stack_url_<x>`` and the names of the resources the stack holds. Names are built only there.
 2. Write the stack in ``cookiecutter_aws_cdk_demo/cdk/stacks/``: ``<x>_stack.py``, or ``<x>_stack/stack.py`` plus ``stack_0N_<topic>.py`` mixins once it grows. It takes ``(scope, id, stack_name, env, config)`` plus the resources of other stacks it uses.
 3. Add a ``<x>`` entry to ``StackCtxEnum`` and ``StackEnum``, after the stacks it depends on.
-4. Add ``<x>_stack_exports.py`` and its test if other projects need its outputs.
+4. If other projects need its outputs, add ``<x>_stack_exports.py`` (stdlib only, literal stack names) and a ``tests_int/`` test with ``check_stack_exports``.
 5. Run ``mise run cdk-gen-tasks``. It rewrites the block between ``# <cdk-stack-tasks>`` and ``# </cdk-stack-tasks>`` in ``mise.toml``; never edit that block by hand. A unit test fails while the block is out of date.
 
 

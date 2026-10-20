@@ -1,32 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-Generate the ``cdk-*`` mise tasks: one per (action, environment, stack).
+Generate the ``<cdk-stack-tasks>`` block of ``mise.toml`` (``mise run cdk-gen-tasks``):
+four tasks per (environment, stack), ``cdk-<action>-<env>-<stack>-stack``, plus
+four ``cdk-<action>-<env>-all`` per environment. Each task prints the console URL
+of the stacks it acts on, then runs one plain cdk command in ``cdk/`` with
+``ENV_NAME`` and ``--profile {{env.AWS_PROFILE_FOR_<ENV>}}``. See README, Stack Workflow.
 
-Each (environment, stack) pair gets four tasks named ``cdk-<action>-<env>-<stack>-stack``,
-such as ``cdk-up-dev-alerts-stack``; the ``-stack`` ending marks a task that acts on
-one stack only. ``cdk-<action>-<env>-all`` runs the action on every stack, so no
-stack may be named ``all``.
-
-Each task is one plain cdk command, run in ``cdk/``:
-
-- ``ENV_NAME=<env>`` is set for the task, and the cdk CLI passes it to the cdk app,
-  which then creates the stacks of that environment only.
-- ``--profile {{env.AWS_PROFILE_FOR_<ENV>}}`` gives the cdk CLI the credentials of
-  that environment; mise reads the value from ``.env`` and stops with an error if
-  it is not set. ``synth`` makes no AWS call, so it takes no profile.
-- One stack is selected by its construct ID, which is its stack name, with
-  ``--exclusively``; ``all`` uses ``--all`` and lets the cdk CLI order the stacks
-  by their dependencies.
-- Before the cdk command, the task prints the CloudFormation console URL of each
-  stack it acts on: one for a ``-stack`` task, all of them for an ``all`` task.
-
-The stacks come from the entry names of
-:class:`~cookiecutter_aws_cdk_demo.cdk.stack_ctx_enum.StackCtxEnum`, the environments
-from :class:`~cookiecutter_aws_cdk_demo.env.EnvNameEnum`, and the construct IDs from
-the config of each environment; nothing calls AWS.
-The tasks live in ``mise.toml`` between :data:`BEGIN_MARKER` and :data:`END_MARKER`;
-``mise run cdk-gen-tasks`` rewrites that block and leaves the rest of the file alone.
+The stacks are the entries of :class:`~cookiecutter_aws_cdk_demo.cdk.stack_ctx_enum.StackCtxEnum`,
+the environments the members of :class:`~cookiecutter_aws_cdk_demo.env.EnvNameEnum`;
+nothing calls AWS.
 """
 
 from __future__ import annotations
@@ -36,7 +19,6 @@ from pathlib import Path
 
 from ..env import ENV_NAME_VAR
 from ..env import EnvNameEnum
-from ..runtime import RuntimeNameEnum
 from ..config.api import Config
 from ..one.api import One
 from ..one.one_02_boto_ses import get_aws_profile_env_var
@@ -62,16 +44,17 @@ The line that closes the generated block in ``mise.toml``.
 @dataclasses.dataclass(frozen=True)
 class CdkAction:
     """
-    One kind of ``cdk-<name>-<env>-<stack>-stack`` task.
+    One kind of generated task, such as ``up``.
     """
 
     # fmt: off
     name: str = dataclasses.field()  #: The action part of the task name, such as ``up``.
     emoji: str = dataclasses.field()  #: Shown in front of the task description.
     summary: str = dataclasses.field()  #: The task description, with ``{target}`` and ``{env}`` placeholders.
-    command: str = dataclasses.field()  #: The cdk command with its options, such as ``deploy --require-approval never``.
-    use_profile: bool = dataclasses.field()  #: Whether it calls AWS and needs ``--profile``; ``synth`` does not.
-    all_option: str = dataclasses.field(default="--all")  #: Selects every stack; ``cdk synth`` has no ``--all`` and does every stack without one.
+    sub_command: str = dataclasses.field()  #: The cdk sub command, such as ``deploy``.
+    options: str = dataclasses.field()  #: Options after the stack selector, such as ``--require-approval never``.
+    use_profile: bool = dataclasses.field()  #: Whether it calls AWS and needs ``--profile``.
+    all_option: str = dataclasses.field(default="--all")  #: Selects every stack; ``cdk synth`` does every stack without one.
     # fmt: on
 
 
@@ -81,7 +64,8 @@ CDK_ACTIONS: list[CdkAction] = [
         name="synth",
         emoji="⚪",
         summary="Synthesize {target} of {env} to CloudFormation templates (no AWS call)",
-        command="synth",
+        sub_command="synth",
+        options="",
         use_profile=False,
         all_option="",
     ),
@@ -89,28 +73,43 @@ CDK_ACTIONS: list[CdkAction] = [
         name="plan",
         emoji="🔵",
         summary="Plan {target} of {env}: diff against what is deployed, through a CloudFormation change set (no deploy)",
-        command="diff --method auto",
+        sub_command="diff",
+        options="--method auto",
         use_profile=True,
     ),
     CdkAction(
         name="up",
         emoji="🟢",
         summary="Deploy {target} of {env} (no approval prompt)",
-        command="deploy --require-approval never",
+        sub_command="deploy",
+        options="--require-approval never",
         use_profile=True,
     ),
     CdkAction(
         name="down",
         emoji="🔴",
         summary="Destroy {target} of {env} (force, no confirmation)",
-        command="destroy --force",
+        sub_command="destroy",
+        options="--force",
         use_profile=True,
     ),
     # fmt: on
 ]
 """
-The four actions every (environment, stack) gets, in the order they appear in ``mise.toml``.
+The four actions, in the order they appear in ``mise.toml``.
 """
+
+
+@dataclasses.dataclass(frozen=True)
+class StackTarget:
+    """
+    One stack of one environment, as a task needs it.
+    """
+
+    # fmt: off
+    construct_id: str = dataclasses.field()  #: Selects the stack in the cdk CLI; it is the stack name.
+    console_url: str = dataclasses.field()  #: Printed before the cdk command.
+    # fmt: on
 
 
 def to_stack_slug(stack: str) -> str:
@@ -122,8 +121,6 @@ def to_stack_slug(stack: str) -> str:
 
 def validate_stacks(stacks: list[str]) -> None:
     """
-    Check that the stack names can be used in task names.
-
     :raises ValueError: a stack is named :data:`ALL`, or two stacks share a slug.
     """
     slugs = [to_stack_slug(stack) for stack in stacks]
@@ -135,38 +132,24 @@ def validate_stacks(stacks: list[str]) -> None:
         raise ValueError(f"duplicate stack name in {stacks}")
 
 
-@dataclasses.dataclass(frozen=True)
-class StackTarget:
-    """
-    What a task needs to know about one stack of one environment.
-    """
-
-    # fmt: off
-    construct_id: str = dataclasses.field()  #: Selects the stack in the cdk CLI; it is the stack name.
-    console_url: str = dataclasses.field()  #: The CloudFormation console URL, printed before the cdk command.
-    # fmt: on
-
-
 def get_stack_targets(env_name: str) -> dict[str, StackTarget]:
     """
-    Every stack of one environment, by entry name, in creation order, such as
-    ``{"alerts": StackTarget("my-project-dev-alerts", "https://..."), ...}``.
-    It loads the config of that environment; it makes no AWS call.
+    Every stack of one environment, by entry name, in creation order.
+    Loads the config of that environment; makes no AWS call.
     """
     one = One()
-    one.config = Config.load(
-        env_name=env_name,
-        runtime_name=RuntimeNameEnum.local.value,
-    )
+    one.config = Config.load_from_local_config_file(env_name=env_name)
     stack_ctx_enum = StackCtxEnum(one=one)
-    targets = {}
-    for stack in list_entry_names(StackCtxEnum):
-        stack_ctx = stack_ctx_enum.get(stack)
-        targets[stack] = StackTarget(
+    return {
+        stack: StackTarget(
             construct_id=stack_ctx.construct_id,
             console_url=one.config.get_cft_stack_url(stack_ctx.stack_name),
         )
-    return targets
+        for stack, stack_ctx in zip(
+            list_entry_names(StackCtxEnum),
+            stack_ctx_enum.get_all(),
+        )
+    }
 
 
 def get_task_name(
@@ -175,8 +158,7 @@ def get_task_name(
     stack_slug: str,
 ) -> str:
     """
-    The name of a generated task: ``cdk-<action>-<env>-all`` for every stack,
-    ``cdk-<action>-<env>-<stack>-stack`` for one, such as ``cdk-up-dev-alerts-stack``.
+    ``cdk-<action>-<env>-all``, or ``cdk-<action>-<env>-<stack>-stack`` for one stack.
     """
     if stack_slug == ALL:
         return f"cdk-{action_name}-{env_name}-{ALL}"
@@ -189,44 +171,35 @@ def get_cdk_command(
     construct_id: str | None,
 ) -> str:
     """
-    The cdk command line of a task, such as
-    ``cdk deploy my-project-dev-alerts --exclusively --require-approval never --profile {{env.AWS_PROFILE_FOR_DEV}}``.
+    The cdk command line of a task.
 
-    :param construct_id: the stack to act on, or ``None`` for every stack
-        (:attr:`CdkAction.all_option`).
+    :param construct_id: the stack to act on, or ``None`` for every stack.
     """
-    sub_command, _, options = action.command.partition(" ")
-    parts = ["cdk", sub_command]
+    parts = ["cdk", action.sub_command]
     if construct_id is None:
-        if action.all_option:
-            parts.append(action.all_option)
+        parts.append(action.all_option)
     else:
         parts.extend([construct_id, "--exclusively"])
-    if options:
-        parts.append(options)
+    parts.append(action.options)
     if action.use_profile:
         parts.append(f"--profile {{{{env.{get_aws_profile_env_var(env_name)}}}}}")
-    return " ".join(parts)
+    return " ".join(part for part in parts if part)
 
 
 def get_run_script(
     action: CdkAction,
     env_name: str,
     targets: list[StackTarget],
-    select_all: bool,
+    construct_id: str | None,
 ) -> str:
     """
-    The script of a task: print the console URL of every stack it acts on, so the
-    user can watch it in the console, then print the cdk command and run it.
-
-    :param targets: the stacks the task acts on.
-    :param select_all: ``True`` for the ``all`` tasks (``--all``).
+    The script of a task: the console URL of each stack in ``targets``, then the
+    cdk command, printed and run.
     """
+    command = get_cdk_command(action, env_name, construct_id)
     lines = ["echo '--- CloudFormation console ---'"]
     for target in targets:
         lines.append(f"echo '{target.construct_id}: {target.console_url}'")
-    construct_id = None if select_all else targets[0].construct_id
-    command = get_cdk_command(action, env_name, construct_id)
     lines.append("echo '--- Run command ---'")
     lines.append(f"echo '{command}'")
     lines.append(command)
@@ -239,13 +212,16 @@ def _render_task(
     stack_slug: str,
     targets: list[StackTarget],
 ) -> str:
-    select_all = stack_slug == ALL
-    target = "all stacks" if select_all else f"stack {stack_slug}"
+    if stack_slug == ALL:
+        construct_id = None
+        target = "all stacks"
+    else:
+        construct_id = targets[0].construct_id
+        target = f"stack {stack_slug}"
     summary = action.summary.format(target=target, env=env_name)
-    task_name = get_task_name(action.name, env_name, stack_slug)
-    script = get_run_script(action, env_name, targets, select_all)
+    script = get_run_script(action, env_name, targets, construct_id)
     lines = [
-        f'[tasks."{task_name}"]',
+        f'[tasks."{get_task_name(action.name, env_name, stack_slug)}"]',
         f'description = "{action.emoji} {summary}"',
         'dir = "cdk"',
         f'env = {{ {ENV_NAME_VAR} = "{env_name}" }}',
@@ -259,17 +235,16 @@ def render_cdk_tasks(env_stack_targets: dict[str, dict[str, StackTarget]]) -> st
     """
     Render the whole generated block, markers included.
 
-    :param env_stack_targets: for each environment, its stacks by entry name, see
-        :func:`get_stack_targets`. Tasks follow its order: by environment, then
+    :param env_stack_targets: for each environment, its stacks by entry name (see
+        :func:`get_stack_targets`). Tasks follow its order: by environment, then
         the ``all`` tasks, then each stack.
 
     :raises ValueError: see :func:`validate_stacks`.
     """
-    header = (
+    parts = [
         f"{BEGIN_MARKER}\n"
-        "# Generated by ``mise run cdk-gen-tasks`` from StackCtxEnum. Do not edit by hand."
-    )
-    parts = [header]
+        "# Generated by `mise run cdk-gen-tasks` from StackCtxEnum. Do not edit by hand."
+    ]
     for env_name, stack_targets in env_stack_targets.items():
         validate_stacks(list(stack_targets))
         groups = [(ALL, list(stack_targets.values()))]
@@ -277,13 +252,7 @@ def render_cdk_tasks(env_stack_targets: dict[str, dict[str, StackTarget]]) -> st
             groups.append((to_stack_slug(stack), [target]))
         for stack_slug, targets in groups:
             for action in CDK_ACTIONS:
-                task = _render_task(
-                    action=action,
-                    env_name=env_name,
-                    stack_slug=stack_slug,
-                    targets=targets,
-                )
-                parts.append(task)
+                parts.append(_render_task(action, env_name, stack_slug, targets))
     parts.append(END_MARKER)
     return "\n\n".join(parts)
 
@@ -292,10 +261,31 @@ def render_project_cdk_tasks() -> str:
     """
     :func:`render_cdk_tasks` for every stack of this project in every environment.
     """
-    env_stack_targets = {
-        member.value: get_stack_targets(member.value) for member in EnvNameEnum
-    }
-    return render_cdk_tasks(env_stack_targets)
+    return render_cdk_tasks(
+        {member.value: get_stack_targets(member.value) for member in EnvNameEnum}
+    )
+
+
+def print_cdk_stack_urls() -> None:
+    """
+    Print the console URL of every stack in every environment
+    (``mise run print-cdk-stack-urls``). It never raises: an environment whose
+    stacks cannot be worked out, such as one without its ``-secret`` config file,
+    prints one error line, and the others are still printed.
+    """
+    for member in EnvNameEnum:
+        env_name = member.value
+        print(f"--- {env_name} ---")
+        try:
+            targets = get_stack_targets(env_name)
+        except Exception as e:
+            print(
+                f"ERROR: cannot work out the stacks of {env_name!r}: "
+                f"{type(e).__name__}: {e}"
+            )
+            continue
+        for target in targets.values():
+            print(f"{target.construct_id}: {target.console_url}")
 
 
 def replace_cdk_tasks_block(text: str, block: str) -> str:

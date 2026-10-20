@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-The alerts stack: an SNS topic that other stacks publish alerts to, and the log
-level of the environment in SSM. Every resource is free while idle.
-
-A simple stack like this one is a single ``<name>_stack.py`` file. A stack that
-grows past a few resource groups becomes a ``<name>_stack/`` folder with one
-mixin per group, like :mod:`~cookiecutter_aws_cdk_demo.cdk.stacks.publisher_stack`.
+The alerts stack, the single-file form of a stack: an SNS topic that other stacks
+publish alerts to, and the log level of the environment in SSM.
 """
 
 from __future__ import annotations
@@ -21,20 +17,8 @@ from ...config.api import Config
 
 class AlertsStack(cdk.Stack):
     """
-    Holds the alert topic, ``config.sns_topic_name_alerts``, and the parameter
-    ``config.ssm_param_name_log_level`` valued ``config.log_level``.
-
-    Every stack takes the standard arguments of
-    :meth:`cdk_mate.stack_ctx.StackCtx.to_stack_kwargs` plus the config of its
-    environment, which it keeps as ``self.config``. It reads names and values only
-    from there, never builds a name itself, and makes no AWS call, so the same
-    config always synthesizes the same template.
-
-    :param scope: the CDK app.
-    :param id: the construct ID, such as ``config.cft_stack_name_alerts``, the same as ``stack_name``.
-    :param stack_name: the CloudFormation stack name, ``config.cft_stack_name_alerts``.
-    :param env: the account and region of ``config``.
-    :param config: the config of the environment being deployed.
+    Takes the standard arguments of :meth:`cdk_mate.stack_ctx.StackCtx.to_stack_kwargs`
+    plus the config of its environment; every name comes from the config.
     """
 
     def __init__(

@@ -10,8 +10,6 @@ def test():
     _ = api.Config
     _ = api.One
     _ = api.one
-    _ = api.cdk
-    _ = api.cdk.StackEnum
 
 
 if __name__ == "__main__":

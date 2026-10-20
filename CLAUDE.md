@@ -35,9 +35,10 @@ The CDK layout and the mise tasks are in `README.rst` (Stack Workflow); the cdk_
 
 - `one.config`, `one.bsm`, `one.stack_ctx_enum`, `one.stack_enum` all belong to the current environment, which `ENV_NAME` selects (default `dev`).
 - Humans run `mise run cdk-<synth|plan|up|down>-<env>-<<stack>-stack|all>` (such as `cdk-up-dev-alerts-stack`, `cdk-up-dev-all`). Each task is one plain cdk command (read it in `mise.toml`). To run one yourself, call the cdk CLI from `cdk/` with the environment's name and profile, construct ID = stack name: `ENV_NAME=dev mise exec -- cdk diff cookiecutter-aws-cdk-demo-dev-alerts --exclusively --profile "$AWS_PROFILE_FOR_DEV"`.
+- `mise run print-cdk-stack-urls` lists every stack's console URL; it never fails as a whole.
 - `synth`, `plan` (diff), and `ls` change nothing. `up` (deploy) and `down` (destroy) change AWS: run them only after the user's yes, one environment per yes.
 - After changing the entries of `StackCtxEnum`, run `mise run cdk-gen-tasks`. Keep `StackCtxEnum` and `StackEnum` entries identical, one per stack (a test checks it).
-- `*_stack_exports.py` must import only the standard library; its stack names are literal values (a test checks them against the config).
+- `*_stack_exports.py` must import only the standard library; its stack names are literal values. `mise run int-test` checks them against the deployed stacks (needs a deploy, so ask before relying on it).
 
 ## Skills
 

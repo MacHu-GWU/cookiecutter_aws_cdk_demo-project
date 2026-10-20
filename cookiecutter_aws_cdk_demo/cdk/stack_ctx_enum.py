@@ -1,27 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
-Layer 1 of the cdk_mate two-layer pattern: one stack context per stack.
-
-A :class:`~cdk_mate.stack_ctx.StackCtx` is plain data that names one stack
-(construct ID, stack name, account, region) plus the boto session that deploys it.
-Every entry belongs to the current environment: its names, account, and region
-come from ``one.config``, and its session is ``one.bsm``. Building one creates no
-CDK construct and makes no AWS call.
-
-- **Who uses it:** :class:`~cookiecutter_aws_cdk_demo.cdk.stack_enum.StackEnum`
-  (``to_stack_kwargs``), ``mise run cdk-gen-tasks`` (the construct ID of each
-  stack in each environment), and any script that runs a cdk command from
-  Python (``one.stack_ctx_enum.alerts.cdk_diff(...)``) with the session ``one.bsm``.
-- **Layer 2,** :mod:`~cookiecutter_aws_cdk_demo.cdk.stack_enum`, creates the CDK
-  stack of each entry, with an attribute of the same name.
-- **Naming:** the attribute name is the stack name, such as ``alerts``; with ``_``
-  turned into ``-``, it is also the stack part of the mise task names. Entries are
-  listed in creation order: a stack comes after the stacks it depends on.
-
-Use it as ``one.stack_ctx_enum``. To add a stack, add one entry here and one in
-:class:`~cookiecutter_aws_cdk_demo.cdk.stack_enum.StackEnum`, then run
-``mise run cdk-gen-tasks``.
+Layer 1 of the cdk_mate two-layer pattern: one :class:`~cdk_mate.stack_ctx.StackCtx`
+per stack of the current environment, with its construct ID, stack name, account,
+region, and session (``one.bsm``). Building one creates no CDK construct and makes
+no AWS call. Layer 2, :mod:`~cookiecutter_aws_cdk_demo.cdk.stack_enum`, has an entry
+of the same name per stack; ``mise run cdk-gen-tasks`` reads the entry names.
 """
 
 from __future__ import annotations
@@ -51,8 +35,8 @@ def list_entry_names(klass: type) -> list[str]:
 @dataclasses.dataclass
 class StackCtxEnum:
     """
-    One :class:`~cdk_mate.stack_ctx.StackCtx` per stack of the current
-    environment, built on first access.
+    One entry per stack, named like the stack (``alerts``), in creation order:
+    a stack comes after the stacks it depends on.
     """
 
     # fmt: off
@@ -61,11 +45,9 @@ class StackCtxEnum:
 
     def _new(self, stack_name: str) -> StackCtx:
         """
-        The context of ``stack_name``. The construct ID is the stack name itself,
-        such as ``my-project-dev-alerts``, so the cdk CLI, the CloudFormation
-        console, and the config all use one name, which already says the
-        environment. The account and region come from the config instead of an
-        STS call, unlike :meth:`cdk_mate.stack_ctx.StackCtx.new`.
+        The construct ID is the stack name itself, which already says the
+        environment. The account and region come from the config, not from an
+        STS call as in :meth:`cdk_mate.stack_ctx.StackCtx.new`.
         """
         return StackCtx(
             construct_id=stack_name,
@@ -81,14 +63,11 @@ class StackCtxEnum:
 
     @cached_property
     def publisher(self) -> StackCtx:
-        """
-        Depends on :attr:`alerts`.
-        """
         return self._new(self.one.config.cft_stack_name_publisher)
 
     def get(self, stack: str) -> StackCtx:
         """
-        The entry of one stack given by name, such as ``get("alerts")``.
+        The entry of a stack given by name, such as ``get("alerts")``.
 
         :raises AttributeError: there is no such entry.
         """
@@ -96,6 +75,6 @@ class StackCtxEnum:
 
     def get_all(self) -> list[StackCtx]:
         """
-        Every entry, in creation order.
+        Every entry, in creation order; loop over this instead of naming each stack.
         """
-        return [getattr(self, name) for name in list_entry_names(type(self))]
+        return [self.get(name) for name in list_entry_names(type(self))]
