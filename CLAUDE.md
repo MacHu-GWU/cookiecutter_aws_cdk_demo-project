@@ -29,11 +29,12 @@ This repo follows the pywf open-source Python library template. **Before creatin
 - `mise run publish`, `mise run release`, `mise run update-github-metadata`, and the `setup-*` tasks change external services: run each one only after the user's yes, one step per yes.
 - The changelog is `release-history.rst`. Never edit its `x.y.z (Backlog)` section.
 
-## CDK
+## AWS and CDK
 
-The CDK layout and the mise tasks are in `README.rst` (Stack Workflow); the cdk_mate pattern is in the `pypi-cdk_mate` skill, and every cdk CLI option is in the `aws-cdk-cli-ref` skill.
+**Before changing the config, credentials, a stack, a CDK task, or a CDK test, load the `pywf-aws-cdk-base` skill** and read the reference for the job. It holds the runtime, env, config, boto session, and `one` conventions, then the CDK ones. Ignore the multi-stack best practice of cdk_mate; use the `pypi-cdk_mate` skill only for the cdk_mate API, and the `aws-cdk-cli-ref` skill for a cdk CLI option.
 
 - `one.config`, `one.bsm`, `one.stack_ctx_enum`, `one.stack_enum` all belong to the current environment, which `ENV_NAME` selects (default `dev`).
+- Every resource name, ARN, and console URL is a property in `config/config_01_name.py`; a stack builds no name string.
 - Humans run `mise run cdk-<synth|plan|up|down>-<env>-<<stack>-stack|all>` (such as `cdk-up-dev-alerts-stack`, `cdk-up-dev-all`). Each task is one plain cdk command (read it in `mise.toml`). To run one yourself, call the cdk CLI from `cdk/` with the environment's name and profile, construct ID = stack name: `ENV_NAME=dev mise exec -- cdk diff cookiecutter-aws-cdk-demo-dev-alerts --exclusively --profile "$AWS_PROFILE_FOR_DEV"`.
 - `mise run print-cdk-stack-urls` lists every stack's console URL; it never fails as a whole.
 - `synth`, `plan` (diff), and `ls` change nothing. `up` (deploy) and `down` (destroy) change AWS: run them only after the user's yes, one environment per yes.
@@ -56,6 +57,7 @@ The CDK layout and the mise tasks are in `README.rst` (Stack Workflow); the cdk_
 | Upgrade or replace dependencies | `pywf-oss-upgrade-deps` |
 | Install an optional community skill, or catalog one | `pywf-oss-add-community-skill` |
 | Check the repo against the template | `pywf-oss-audit` |
+| Config, credentials, stacks, CDK tasks and tests | `pywf-aws-cdk-base` |
 | Not sure which | `pywf-oss-base` |
 
 <!-- END pywf-oss template block -->
