@@ -15,6 +15,7 @@ def test():
     _ = api.ALL
     _ = api.CdkAction
     _ = api.CDK_ACTIONS
+    _ = api.StackTarget
     _ = api.render_cdk_tasks
     _ = api.render_project_cdk_tasks
     _ = api.update_mise_toml

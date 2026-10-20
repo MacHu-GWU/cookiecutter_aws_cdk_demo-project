@@ -19,8 +19,8 @@ def test_names(config: Config):
     # stacks
     assert config.cft_stack_name_alerts == "my-project-dev-alerts"
     assert config.cft_stack_name_publisher == "my-project-dev-publisher"
-    assert "filteringText=my-project-dev-alerts" in config.cft_stack_url_alerts
-    assert "filteringText=my-project-dev-publisher" in config.cft_stack_url_publisher
+    assert config.cft_stack_url_alerts == "https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringText=my-project-dev-alerts&filteringStatus=active&viewNested=true"
+    assert config.cft_stack_url_publisher == "https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringText=my-project-dev-publisher&filteringStatus=active&viewNested=true"
     # exports
     assert config.cft_export_name_alert_topic_arn == "my-project-dev-alert-topic-arn"
     assert config.cft_export_name_publisher_role_arn == "my-project-dev-publisher-role-arn"

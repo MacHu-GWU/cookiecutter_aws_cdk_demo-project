@@ -14,6 +14,7 @@ from .stack_enum import StackEnum
 from .mise_tasks import ALL
 from .mise_tasks import CdkAction
 from .mise_tasks import CDK_ACTIONS
+from .mise_tasks import StackTarget
 from .mise_tasks import render_cdk_tasks
 from .mise_tasks import render_project_cdk_tasks
 from .mise_tasks import update_mise_toml

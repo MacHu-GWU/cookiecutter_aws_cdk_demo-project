@@ -62,11 +62,13 @@ class ConfigNameMixin:
 
     def get_cft_stack_url(self: Config, stack_name: str) -> str:
         """
-        The CloudFormation console URL that lists the stack.
+        The CloudFormation console URL of the stack, found by its name, so it needs
+        no stack ARN (which ends in an ID assigned at creation) and works before the
+        stack exists.
         """
         return (
             f"https://{self.aws_region}.console.aws.amazon.com/cloudformation/home"
-            f"?region={self.aws_region}#/stacks?filteringText={stack_name}"
+            f"?region={self.aws_region}#/stacks/stackinfo?filteringText={stack_name}"
             f"&filteringStatus=active&viewNested=true"
         )
 
