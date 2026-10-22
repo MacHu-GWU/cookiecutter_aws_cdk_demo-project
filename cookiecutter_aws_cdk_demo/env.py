@@ -23,7 +23,7 @@ import enum
 from functools import cached_property
 
 
-class EnvNameEnum(enum.Enum):
+class EnvNameEnum(enum.StrEnum):
     """
     Every environment this project can be deployed to.
     """
