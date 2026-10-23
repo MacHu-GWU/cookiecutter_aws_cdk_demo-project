@@ -4,7 +4,7 @@ description: "How CDK code is tested: unit tests only synthesize each stack thro
 
 # CDK Tests
 
-Seed repo: [`tests/cdk/`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/tree/0.1.1/tests/cdk), [a stack test](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/0.1.1/tests/cdk/stacks/test_cdk_stacks_alerts_stack.py).
+Seed repo: [`tests/cdk/`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/tree/1.0.0/tests/cdk), [a stack test](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/1.0.0/tests/cdk/stacks/test_cdk_stacks_alerts_stack.py).
 
 ---
 

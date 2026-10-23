@@ -21,7 +21,7 @@ description: "Where CDK code lives: everything in <package_name>/cdk/, one stack
         └── stack_02_<topic>.py
 ```
 
-Seed repo: [`alerts_stack.py`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/0.1.1/cookiecutter_aws_cdk_demo/cdk/stacks/alerts_stack.py) (one file), [`publisher_stack/`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/tree/0.1.1/cookiecutter_aws_cdk_demo/cdk/stacks/publisher_stack) (folder).
+Seed repo: [`alerts_stack.py`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/1.0.0/cookiecutter_aws_cdk_demo/cdk/stacks/alerts_stack.py) (one file), [`publisher_stack/`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/tree/1.0.0/cookiecutter_aws_cdk_demo/cdk/stacks/publisher_stack) (folder).
 
 ---
 
@@ -36,4 +36,4 @@ Seed repo: [`alerts_stack.py`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk
 
 ## 3. The thin `cdk/` folder at the root
 
-Only `cdk.json` (`"app": "../.venv/bin/python cdk_app.py"`) and [`cdk_app.py`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/0.1.1/cdk/cdk_app.py), whose body is `one.stack_enum.synth()`. The app holds the stacks of the current environment only (`03-env.md`), so `ENV_NAME=prd cdk synth` synthesizes prd and never needs another environment's config. Never put stack logic here.
+Only `cdk.json` (`"app": "../.venv/bin/python cdk_app.py"`) and [`cdk_app.py`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/1.0.0/cdk/cdk_app.py), whose body is `one.stack_enum.synth()`. The app holds the stacks of the current environment only (`03-env.md`), so `ENV_NAME=prd cdk synth` synthesizes prd and never needs another environment's config. Never put stack logic here.

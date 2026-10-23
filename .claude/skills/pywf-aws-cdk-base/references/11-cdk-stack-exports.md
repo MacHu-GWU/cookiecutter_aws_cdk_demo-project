@@ -4,7 +4,7 @@ description: "The <x>_stack_exports.py module every stack with outputs has: a st
 
 # Stack Exports
 
-Seed repo: [`alerts_stack_exports.py`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/0.1.1/cookiecutter_aws_cdk_demo/cdk/stacks/alerts_stack_exports.py), [its test](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/0.1.1/tests_int/test_cdk_stacks_alerts_stack_exports.py).
+Seed repo: [`alerts_stack_exports.py`](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/1.0.0/cookiecutter_aws_cdk_demo/cdk/stacks/alerts_stack_exports.py), [its test](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/blob/1.0.0/tests_int/test_cdk_stacks_alerts_stack_exports.py).
 
 ---
 

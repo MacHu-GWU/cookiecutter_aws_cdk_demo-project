@@ -1,13 +1,13 @@
 ---
 name: pywf-aws-cdk-base
-description: "Conventions of the pywf AWS CDK project template (v0.1.1), one topic per reference: runtime, environment, the config model, names, and loading, the boto session, the one singleton, then the CDK part: layout, StackCtxEnum / StackEnum, stack exports, generated mise tasks with console URLs, synth-only tests, and change recipes. Load it before changing config, credentials, a stack, a CDK task, or a CDK test in such a project, or for a question about how it is organized."
+description: "Conventions of the pywf AWS CDK project template (v1.0.0), one topic per reference: runtime, environment, the config model, names, and loading, the boto session, the one singleton, then the CDK part: layout, StackCtxEnum / StackEnum, stack exports, generated mise tasks with console URLs, synth-only tests, and change recipes. Load it before changing config, credentials, a stack, a CDK task, or a CDK test in such a project, or for a question about how it is organized."
 ---
 
 The conventions of a multi-environment AWS CDK project generated from the pywf AWS CDK template. A generated project already follows all of them; this skill says what they are, so changes keep them.
 
 ## Version
 
-Template **0.1.1**, the `version` in the seed repo's `pyproject.toml`. Every link points to the git tag of that version: [MacHu-GWU/cookiecutter_aws_cdk_demo-project at 0.1.1](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/tree/0.1.1). If the project in front of you differs from the linked files, the project wins; tell the user.
+Template **1.0.0**, the `version` in the seed repo's `pyproject.toml`. Every link points to the git tag of that version: [MacHu-GWU/cookiecutter_aws_cdk_demo-project at 1.0.0](https://github.com/MacHu-GWU/cookiecutter_aws_cdk_demo-project/tree/1.0.0). If the project in front of you differs from the linked files, the project wins; tell the user.
 
 ## Precedence
 
